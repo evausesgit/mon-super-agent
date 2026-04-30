@@ -1,0 +1,199 @@
+"use client";
+
+import Link from "next/link";
+import { FormEvent, useState, useTransition } from "react";
+
+type AgentCreationResponse = {
+  id: string;
+  name: string;
+  status: "ready" | "pending_verification";
+  recommendedChannel: "telegram" | "whatsapp";
+  nextStep: string;
+  activationTarget: string;
+};
+
+type ErrorResponse = {
+  error?: string;
+};
+
+const defaultValues = {
+  agentName: "",
+  userContact: "",
+  channel: "telegram",
+};
+
+export function AgentCreationForm() {
+  const [formValues, setFormValues] = useState(defaultValues);
+  const [result, setResult] = useState<AgentCreationResponse | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage(null);
+
+    startTransition(async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"}/agents`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formValues),
+          },
+        );
+
+        const payload = (await response.json()) as
+          | AgentCreationResponse
+          | ErrorResponse;
+
+        if (!response.ok) {
+          setResult(null);
+          setErrorMessage(
+            "error" in payload ? payload.error ?? "Provisioning failed." : "Provisioning failed.",
+          );
+          return;
+        }
+
+        setResult(payload as AgentCreationResponse);
+      } catch {
+        setResult(null);
+        setErrorMessage(
+          "The API is not reachable yet. Start the backend and try again.",
+        );
+      }
+    });
+  }
+
+  return (
+    <div className="agent-form-card">
+      <form className="agent-form" onSubmit={handleSubmit}>
+        <label>
+          Agent name
+          <input
+            name="agentName"
+            placeholder="Nova, Atlas, Sora..."
+            required
+            value={formValues.agentName}
+            onChange={(event) =>
+              setFormValues((current) => ({
+                ...current,
+                agentName: event.target.value,
+              }))
+            }
+          />
+        </label>
+
+        <label>
+          Your contact
+          <input
+            name="userContact"
+            placeholder="@telegram_handle or phone number"
+            required
+            value={formValues.userContact}
+            onChange={(event) =>
+              setFormValues((current) => ({
+                ...current,
+                userContact: event.target.value,
+              }))
+            }
+          />
+        </label>
+
+        <fieldset>
+          <legend>Preferred channel</legend>
+
+          <label className="choice-card">
+            <input
+              checked={formValues.channel === "telegram"}
+              name="channel"
+              type="radio"
+              value="telegram"
+              onChange={() =>
+                setFormValues((current) => ({
+                  ...current,
+                  channel: "telegram",
+                }))
+              }
+            />
+            <div>
+              <strong>Telegram</strong>
+              <span>Lowest-friction MVP path</span>
+            </div>
+          </label>
+
+          <label className="choice-card">
+            <input
+              checked={formValues.channel === "whatsapp"}
+              name="channel"
+              type="radio"
+              value="whatsapp"
+              onChange={() =>
+                setFormValues((current) => ({
+                  ...current,
+                  channel: "whatsapp",
+                }))
+              }
+            />
+            <div>
+              <strong>WhatsApp</strong>
+              <span>Higher value, more setup constraints</span>
+            </div>
+          </label>
+        </fieldset>
+
+        <button className="primary-action submit-action" disabled={isPending} type="submit">
+          {isPending ? "Creating..." : "Create my super agent"}
+        </button>
+
+        {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
+      </form>
+
+      <aside className="result-card" aria-live="polite">
+        <p className="section-label">Provisioning result</p>
+        {result ? (
+          <>
+            <h3>{result.id}</h3>
+            <p>
+              Agent: <strong>{result.name}</strong>
+            </p>
+            <p>
+              Status: <strong>{result.status}</strong>
+            </p>
+            <p>
+              Channel: <strong>{result.recommendedChannel}</strong>
+            </p>
+            <p>{result.nextStep}</p>
+            {result.recommendedChannel === "telegram" ? (
+              <a
+                className="activation-link"
+                href={result.activationTarget}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Open Telegram target
+              </a>
+            ) : (
+              <p className="activation-target">
+                Activation target: {result.activationTarget}
+              </p>
+            )}
+            <Link className="detail-link" href={`/agents/${result.id}`}>
+              Open agent detail page
+            </Link>
+          </>
+        ) : (
+          <>
+            <h3>No agent created yet</h3>
+            <p>
+              Submit the form to simulate provisioning and validate the first
+              product loop.
+            </p>
+          </>
+        )}
+      </aside>
+    </div>
+  );
+}

@@ -1,0 +1,21 @@
+{
+  "name": "mon-super-agent",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "orchestration"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace @mon-super-agent/web run dev",
+    "dev:api": "npm --workspace @mon-super-agent/api run dev",
+    "orchestration:demo": "npm --workspace @mon-super-agent/orchestration run demo",
+    "orchestration:run-live": "npm --workspace @mon-super-agent/orchestration run run-live",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
