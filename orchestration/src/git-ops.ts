@@ -25,10 +25,11 @@ export async function listChangedFiles(repoRoot: string) {
     .map((line) => line.replace(/^[A-Z? ]{1,2}\s+/, ""));
 }
 
-export async function runRepoChecks(repoRoot: string) {
+export async function runRepoChecks(repoRoot: string, commands?: string[]) {
+  const checks = commands && commands.length > 0 ? commands : ["npm run lint", "npm run build"];
   await execFileAsync("zsh", [
     "-lic",
-    `cd ${shellEscape(repoRoot)} && npm run lint && npm run build`,
+    `cd ${shellEscape(repoRoot)} && ${checks.join(" && ")}`,
   ]);
 }
 
@@ -37,6 +38,7 @@ export async function commitAndPush(input: {
   taskId: string;
   runId: string;
   files: string[];
+  commitMessage?: string;
 }) {
   if (input.files.length === 0) {
     throw new Error(`No files were changed for ${input.taskId}; refusing to auto-commit.`);
@@ -48,7 +50,7 @@ export async function commitAndPush(input: {
     input.repoRoot,
     "commit",
     "-m",
-    `Autonomous ${input.taskId} validation (${input.runId})`,
+    input.commitMessage ?? `Autonomous ${input.taskId} validation (${input.runId})`,
   ]);
   await execFileAsync("git", ["-C", input.repoRoot, "push", "origin", "main"]);
 
@@ -73,4 +75,3 @@ export function toCommitUrl(remoteUrl: string, commitSha: string) {
 function shellEscape(value: string) {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
-

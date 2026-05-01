@@ -28,8 +28,16 @@ The database now includes:
 - `Run ID`
 - `Last Updated By Agent`
 - `Last Sync At`
+- `Execution Mode`
+- `Files To Touch`
+- `Implementation Brief`
+- `Validation Commands`
+- `Commit Message`
+- `Automation Policy`
 
 These fields let the orchestrator make task movement visible in Notion.
+
+They also make it possible to drive execution from Notion without adding a new hard-coded handler for every task.
 
 ## Task Selection Rule
 
@@ -116,6 +124,37 @@ In this mode, the orchestrator:
 - pushes to `origin/main`
 - marks the task `Done`
 - writes the commit link back into Notion
+
+## Notion-Only Task Configuration
+
+For tasks that should not require a repo code change in `repo-task-executor.ts`, use these fields directly in Notion:
+
+- `Execution Mode`
+  - `generic_markdown`: append or create markdown sections in listed files
+  - `generic_spec`: create a primary spec document plus placeholder implementation files
+  - `manual_handler`: use a dedicated handler coded in the repo
+  - `manual`: do not let the orchestrator execute the task automatically
+- `Files To Touch`
+  - comma-separated or newline-separated file paths relative to the repo root
+- `Implementation Brief`
+  - the executable brief the generic executor should follow
+- `Validation Commands`
+  - commands to run after the change, for example `npm run lint, npm run build`
+- `Commit Message`
+  - commit subject to use for autonomous completion
+- `Automation Policy`
+  - `autonomous`, `needs_review`, or `manual_only`
+
+## Example
+
+An example generic task looks like:
+
+- `Execution Mode = generic_spec`
+- `Files To Touch = docs/provisioning-service.md, apps/api/src/services/provision-agent.ts`
+- `Implementation Brief = Document and scaffold the provisioning contract`
+- `Validation Commands = npm run lint, npm run build`
+- `Commit Message = Define backend provisioning service contract`
+- `Automation Policy = autonomous`
 
 ## Suggested First Real Automation
 

@@ -26,6 +26,17 @@ export type RepoArea =
 
 export type Priority = "P0" | "P1" | "P2" | "P3";
 
+export type ExecutionMode =
+  | "manual"
+  | "generic_markdown"
+  | "generic_spec"
+  | "manual_handler";
+
+export type AutomationPolicy =
+  | "autonomous"
+  | "needs_review"
+  | "manual_only";
+
 export type OrchestrationTask = {
   pageId: string;
   taskId: string;
@@ -41,6 +52,12 @@ export type OrchestrationTask = {
   runId?: string;
   lastUpdatedByAgent?: string;
   link?: string;
+  executionMode?: ExecutionMode;
+  filesToTouch: string[];
+  implementationBrief?: string;
+  validationCommands: string[];
+  commitMessage?: string;
+  automationPolicy?: AutomationPolicy;
 };
 
 export type TaskTransition = {
@@ -56,4 +73,3 @@ export type PickTaskOptions = {
   sprint?: OrchestrationTask["sprint"];
   onlyReady?: boolean;
 };
-

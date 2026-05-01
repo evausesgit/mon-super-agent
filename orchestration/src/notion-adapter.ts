@@ -49,6 +49,12 @@ type NotionRow = {
     runId?: string;
     lastUpdatedByAgent?: string;
     link?: string;
+    executionMode?: OrchestrationTask["executionMode"];
+    filesToTouch?: string[];
+    implementationBrief?: string;
+    validationCommands?: string[];
+    commitMessage?: string;
+    automationPolicy?: OrchestrationTask["automationPolicy"];
   };
 };
 
@@ -234,6 +240,12 @@ export function mapNotionRowToTask(row: NotionRow): OrchestrationTask {
     runId: row.properties.runId,
     lastUpdatedByAgent: row.properties.lastUpdatedByAgent,
     link: row.properties.link,
+    executionMode: row.properties.executionMode,
+    filesToTouch: row.properties.filesToTouch ?? [],
+    implementationBrief: row.properties.implementationBrief,
+    validationCommands: row.properties.validationCommands ?? [],
+    commitMessage: row.properties.commitMessage,
+    automationPolicy: row.properties.automationPolicy,
   };
 }
 
@@ -256,6 +268,16 @@ export function mapNotionPageToTask(page: NotionPage): OrchestrationTask {
     lastUpdatedByAgent:
       readRichText(properties["Last Updated By Agent"]) || undefined,
     link: readUrl(properties.Link) || undefined,
+    executionMode:
+      (readSelect(properties["Execution Mode"]) as OrchestrationTask["executionMode"]) ||
+      undefined,
+    filesToTouch: splitLinesOrCsv(readRichText(properties["Files To Touch"])),
+    implementationBrief: readRichText(properties["Implementation Brief"]) || undefined,
+    validationCommands: splitLinesOrCsv(readRichText(properties["Validation Commands"])),
+    commitMessage: readRichText(properties["Commit Message"]) || undefined,
+    automationPolicy:
+      (readSelect(properties["Automation Policy"]) as OrchestrationTask["automationPolicy"]) ||
+      undefined,
   };
 }
 
@@ -328,4 +350,11 @@ function richText(content: string) {
       },
     },
   ];
+}
+
+function splitLinesOrCsv(content: string) {
+  return content
+    .split(/\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }

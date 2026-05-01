@@ -54,12 +54,13 @@ const runner = new SymphonyRunner(
       };
     }
 
-    await runRepoChecks(repoRoot);
+    await runRepoChecks(repoRoot, task.validationCommands);
     const commitSha = await commitAndPush({
       repoRoot,
       taskId: task.taskId,
       runId,
       files: changedFiles,
+      commitMessage: task.commitMessage,
     });
     const commitUrl = toCommitUrl(await getRemoteOrigin(repoRoot), commitSha);
 
