@@ -93,3 +93,12 @@ WhatsApp should remain a planned phase immediately after the first successful Te
 - whether the first release needs authentication before agent creation
 - how persistent the agent memory should be in MVP
 - how the user reconnects to their agent from the web later
+
+## Delivery Review Loop
+
+Every orchestrated task should leave behind a concrete review surface in the repository.
+
+For MVP delivery, the expected review artifacts are:
+- a changed file or set of changed files
+- a short execution summary in Notion
+- a run artifact under `orchestration/runs/` when the work was executed by the orchestrator

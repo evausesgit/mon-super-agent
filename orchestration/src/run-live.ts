@@ -1,4 +1,5 @@
 import { NotionApiTaskTrackerAdapter } from "./notion-adapter.js";
+import { createRepoTaskExecutor } from "./repo-task-executor.js";
 import { SymphonyRunner } from "./symphony-runner.js";
 
 const token = process.env.NOTION_TOKEN;
@@ -18,28 +19,23 @@ const tracker = new NotionApiTaskTrackerAdapter({
   apiVersion,
 });
 
+const repoRoot = new URL("../../", import.meta.url).pathname;
+const executor = createRepoTaskExecutor({
+  repoRoot,
+});
+
 const runner = new SymphonyRunner(
   tracker,
   "mon-super-agent-orchestrator",
-  async (task) => {
-    const summary = [
-      `Picked ${task.taskId} from Notion and executed it through the live runner.`,
-      `Repo area: ${task.repoArea.join(", ") || "unspecified"}.`,
-      `Acceptance criteria snapshot: ${task.acceptanceCriteria || "missing"}.`,
-    ].join(" ");
-
+  async (task, runId) => {
     if (!task.acceptanceCriteria) {
       return {
         outcome: "blocked" as const,
-        summary: `${summary} The task was blocked because it is missing acceptance criteria.`,
+        summary: `Picked ${task.taskId}, but it was blocked because it is missing acceptance criteria.`,
       };
     }
 
-    return {
-      outcome: "in_review" as const,
-      summary: `${summary} The task has been moved to In Review for human validation.`,
-      link: `https://www.notion.so/${task.pageId.replace(/-/g, "")}`,
-    };
+    return executor(task, runId);
   },
 );
 
@@ -58,6 +54,10 @@ console.log(
       status: result.task.status,
       lastUpdatedByAgent: result.task.lastUpdatedByAgent,
       link: result.task.link,
+      changedFiles:
+        result.kind === "ran" && "changedFiles" in result.execution
+          ? result.execution.changedFiles
+          : undefined,
     },
     null,
     2,

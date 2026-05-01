@@ -7,13 +7,19 @@ export type TaskExecutionResult =
       outcome: "done" | "in_review";
       summary: string;
       link?: string;
+      commitSha?: string;
+      changedFiles?: string[];
     }
   | {
       outcome: "blocked";
       summary: string;
+    }
+  | {
+      outcome: "skipped";
+      summary: string;
     };
 
-export type TaskExecutor = (task: OrchestrationTask) => Promise<TaskExecutionResult>;
+export type TaskExecutor = (task: OrchestrationTask, runId: string) => Promise<TaskExecutionResult>;
 
 export class SymphonyRunner {
   constructor(
@@ -46,12 +52,14 @@ export class SymphonyRunner {
       syncedAt,
     });
 
-    const result = await this.executor(nextTask);
+    const result = await this.executor(nextTask, runId);
     const nextStatus =
       result.outcome === "done"
         ? "Done"
         : result.outcome === "in_review"
           ? "In Review"
+          : result.outcome === "skipped"
+            ? "Todo"
           : "Blocked";
 
     const updatedTask = await this.tracker.updateTask(nextTask.taskId, {
@@ -67,6 +75,7 @@ export class SymphonyRunner {
       kind: "ran" as const,
       runId,
       task: updatedTask,
+      execution: result,
     };
   }
 }
@@ -74,4 +83,3 @@ export class SymphonyRunner {
 function createRunId(taskId: string) {
   return `run_${taskId}_${crypto.randomUUID().slice(0, 8)}`;
 }
-

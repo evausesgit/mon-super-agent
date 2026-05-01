@@ -75,6 +75,7 @@ The current repository contains:
 - a live Notion REST adapter
 - a runner that executes the next ready MVP task
 - a demo script that simulates a task moving to `In Review`
+- a repo-aware executor that can create reviewable file changes for supported tasks
 
 ## Next Step To Make Notion Move For Real
 
@@ -94,6 +95,27 @@ The live adapter:
 - selects the next ready MVP task
 - updates the task page properties through the Notion REST API
 - persists `Run ID`, `Status`, and `Agent Output`
+
+For supported tasks, the live runner also:
+- edits files in the repository
+- writes a review artifact to `orchestration/runs/<run-id>.md`
+- includes the changed files in the Notion summary so humans know what to inspect
+
+## Autonomous Mode
+
+The repository also supports a fully autonomous path:
+
+```bash
+npm run orchestration:run-autonomous
+```
+
+In this mode, the orchestrator:
+- executes a supported task
+- verifies the repo with `npm run lint` and `npm run build`
+- commits the resulting diff
+- pushes to `origin/main`
+- marks the task `Done`
+- writes the commit link back into Notion
 
 ## Suggested First Real Automation
 
