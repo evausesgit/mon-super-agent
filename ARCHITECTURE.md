@@ -148,3 +148,25 @@ Every provisioning attempt should emit structured events so failures can be debu
 - what persistence layer best fits the first release
 - what runtime boundary separates orchestration from the live agent loop
 - how provisioning callbacks should be modeled across connectors
+
+## Reviewable Delivery Artifacts
+
+The orchestration layer should not move a task to `In Review` without leaving behind something concrete to inspect.
+
+The minimal review package for an automated run is:
+- the repo diff
+- the list of changed files
+- the Notion status transition and run metadata
+- a short review artifact in `orchestration/runs/`
+
+## Autonomous Orchestration Boundary
+
+The autonomous orchestrator is responsible for taking shaped tasks from Notion and turning them into verifiable repository changes.
+
+Its boundary in the current system is:
+- select a ready task from Notion
+- run a task-specific handler against the repository
+- verify the resulting state with repository checks
+- publish the resulting change through git and write the commit link back to Notion
+
+It is not yet responsible for generating large product features without a dedicated task handler.
