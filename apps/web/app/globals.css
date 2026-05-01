@@ -344,3 +344,53 @@ button {
     flex-direction: column;
   }
 }
+
+.form-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.onboarding-outline {
+  padding: 1.4rem;
+}
+
+.outline-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.outline-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.9rem;
+  align-items: start;
+  padding: 1rem;
+  border-radius: 20px;
+  background: var(--surface-strong);
+  border: 1px solid rgba(78, 53, 32, 0.08);
+}
+
+.outline-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(15, 122, 107, 0.12);
+  color: var(--accent-strong);
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.outline-card h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1.1rem;
+}
+
+.outline-card p,
+.outline-card small {
+  color: var(--muted);
+  line-height: 1.6;
+}

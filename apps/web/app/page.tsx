@@ -1,3 +1,4 @@
+import { OnboardingOutline } from "./ui/onboarding-outline";
 import { AgentCreationForm } from "./ui/agent-creation-form";
 
 const channels = [
@@ -78,7 +79,10 @@ export default function HomePage() {
           </p>
         </div>
 
-        <AgentCreationForm />
+        <div className="form-stack">
+          <AgentCreationForm />
+          <OnboardingOutline />
+        </div>
       </section>
     </main>
   );
