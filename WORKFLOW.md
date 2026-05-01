@@ -127,3 +127,26 @@ If the project grows, this workflow can evolve toward:
 - agent-per-task execution
 - automated handoffs and status transitions
 - generated summaries back into Notion
+
+## Reviewable Code Path
+
+When an orchestrator executes a task, the expected path is:
+1. move the task from `Todo` to `In Progress`
+2. produce a repo change through a task-specific handler
+3. write a run artifact in `orchestration/runs/`
+4. move the task to `In Review` with the changed files called out in `Agent Output`
+
+A task should stay in `Todo` if the runner has no implementation handler for it yet.
+
+## Autonomous Validation Loop
+
+For supported task types, the orchestrator can validate and ship work without waiting for a manual checkpoint.
+
+The autonomous loop is:
+1. execute the task handler
+2. run `npm run lint` and `npm run build`
+3. create a run artifact under `orchestration/runs/`
+4. commit and push the resulting diff
+5. mark the Notion task `Done` and attach the commit link
+
+This loop should be reserved for low-risk, well-scoped tasks with deterministic acceptance criteria.

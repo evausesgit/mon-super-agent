@@ -124,3 +124,19 @@ Use `MSA-009` or `MSA-010` as the first real orchestrated task:
 - move it to `In Progress`
 - write a short agent summary
 - move it to `In Review`
+
+## Review Loop
+
+A live orchestration run is not complete until a human can inspect a concrete artifact.
+
+The current implementation creates a markdown review artifact under `orchestration/runs/` and summarizes the changed files back into Notion.
+
+## Autonomous Completion
+
+When autonomous mode is enabled for supported tasks, the orchestrator is allowed to move past `In Review` and finish the full delivery loop.
+
+That means it can:
+- verify the repository state automatically
+- create and push a commit
+- write the commit URL back into Notion
+- mark the task `Done` once the checks pass
