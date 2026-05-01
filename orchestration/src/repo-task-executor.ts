@@ -442,6 +442,7 @@ async function ensureFile(filePath: string, content: string) {
   try {
     await readFile(filePath, "utf8");
   } catch {
+    await mkdir(path.dirname(filePath), { recursive: true });
     await writeFile(filePath, `${content}\n`, "utf8");
   }
 }

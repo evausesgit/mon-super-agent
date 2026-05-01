@@ -29,52 +29,61 @@ const runner = new SymphonyRunner(
   tracker,
   "mon-super-agent-autonomous-orchestrator",
   async (task, runId) => {
-    if (!task.acceptanceCriteria) {
+    try {
+      if (!task.acceptanceCriteria) {
+        return {
+          outcome: "blocked" as const,
+          summary: `Picked ${task.taskId}, but it was blocked because it is missing acceptance criteria.`,
+        };
+      }
+
+      const execution = await executor(task, runId);
+
+      if (execution.outcome !== "in_review" && execution.outcome !== "done") {
+        return execution;
+      }
+
+      const changedFiles =
+        "changedFiles" in execution && execution.changedFiles
+          ? execution.changedFiles
+          : await listChangedFiles(repoRoot);
+
+      if (changedFiles.length === 0) {
+        return {
+          outcome: "skipped" as const,
+          summary: `No repo diff remained after executing ${task.taskId}; nothing was committed.`,
+        };
+      }
+
+      await runRepoChecks(repoRoot, task.validationCommands);
+      const commitSha = await commitAndPush({
+        repoRoot,
+        taskId: task.taskId,
+        runId,
+        files: changedFiles,
+        commitMessage: task.commitMessage,
+      });
+      const commitUrl = toCommitUrl(await getRemoteOrigin(repoRoot), commitSha);
+
+      return {
+        outcome: "done" as const,
+        summary: [
+          `Autonomously executed, verified, committed, and pushed ${task.taskId}.`,
+          `Changed files: ${changedFiles.join(", ")}.`,
+          `Commit: ${commitSha.slice(0, 7)}.`,
+        ].join(" "),
+        link: commitUrl,
+        commitSha,
+        changedFiles,
+      };
+    }
+    catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       return {
         outcome: "blocked" as const,
-        summary: `Picked ${task.taskId}, but it was blocked because it is missing acceptance criteria.`,
+        summary: `Autonomous execution for ${task.taskId} was blocked by an error: ${message}`,
       };
     }
-
-    const execution = await executor(task, runId);
-
-    if (execution.outcome !== "in_review" && execution.outcome !== "done") {
-      return execution;
-    }
-
-    const changedFiles =
-      "changedFiles" in execution && execution.changedFiles
-        ? execution.changedFiles
-        : await listChangedFiles(repoRoot);
-
-    if (changedFiles.length === 0) {
-      return {
-        outcome: "skipped" as const,
-        summary: `No repo diff remained after executing ${task.taskId}; nothing was committed.`,
-      };
-    }
-
-    await runRepoChecks(repoRoot, task.validationCommands);
-    const commitSha = await commitAndPush({
-      repoRoot,
-      taskId: task.taskId,
-      runId,
-      files: changedFiles,
-      commitMessage: task.commitMessage,
-    });
-    const commitUrl = toCommitUrl(await getRemoteOrigin(repoRoot), commitSha);
-
-    return {
-      outcome: "done" as const,
-      summary: [
-        `Autonomously executed, verified, committed, and pushed ${task.taskId}.`,
-        `Changed files: ${changedFiles.join(", ")}.`,
-        `Commit: ${commitSha.slice(0, 7)}.`,
-      ].join(" "),
-      link: commitUrl,
-      commitSha,
-      changedFiles,
-    };
   },
 );
 
