@@ -11,7 +11,7 @@ export type CreateAgentResult = AgentProfile & {
 };
 
 export function createAgent(input: CreateAgentInput): CreateAgentResult {
-  const id = `agent_${slugify(input.agentName)}_${Date.now()}`;
+  const id = createHermesAgentId(input.agentName);
   const profile = createAgentProfile({
     id,
     name: input.agentName.trim(),
@@ -25,10 +25,22 @@ export function createAgent(input: CreateAgentInput): CreateAgentResult {
   };
 }
 
+function createHermesAgentId(agentName: string) {
+  const timestamp = Date.now().toString();
+  const prefix = "agent";
+  const separatorLength = 2;
+  const maxSlugLength = 64 - prefix.length - timestamp.length - separatorLength;
+  const slug = slugify(agentName).slice(0, maxSlugLength);
+
+  return `${prefix}-${slug}-${timestamp}`;
+}
+
 function slugify(value: string) {
-  return value
+  const slug = value
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+
+  return slug || "agent";
 }

@@ -1,6 +1,12 @@
-export type Placeholder = {
-  taskId: "MSA-004";
+import { createHermesProfile } from "../hermes/profile.js";
+
+export type ProvisionAgentInput = {
+  agentId: string;
+  agentName: string;
+  ownerId: string;
+  telegramBotToken: string;
 };
 
-export const implementationBrief = "Document and scaffold the backend provisioning service for creating a super agent. The primary artifact should describe the API contract, the lifecycle states, and the responsibilities of the provisioning service. The secondary file should create a placeholder TypeScript module that can later host the implementation.";
-
+export function provisionAgent(input: ProvisionAgentInput): void {
+  createHermesProfile(input);
+}

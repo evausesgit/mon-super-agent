@@ -1,6 +1,7 @@
 import cors from "@fastify/cors";
 import Fastify from "fastify";
 import { createAgent, type CreateAgentResult } from "./routes/agents.js";
+import { provisionAgent } from "./services/provision-agent.js";
 
 const app = Fastify({
   logger: true,
@@ -24,12 +25,19 @@ app.post("/agents", async (request, reply) => {
     agentName?: string;
     channel?: "telegram" | "whatsapp";
     userContact?: string;
+    telegramBotToken?: string;
   };
 
-  if (!body.agentName || !body.channel || !body.userContact) {
+  if (
+    !body.agentName ||
+    !body.channel ||
+    !body.userContact ||
+    !body.telegramBotToken
+  ) {
     reply.code(400);
     return {
-      error: "Missing required fields: agentName, channel, userContact",
+      error:
+        "Missing required fields: agentName, channel, userContact, telegramBotToken",
     };
   }
 
@@ -37,6 +45,13 @@ app.post("/agents", async (request, reply) => {
     agentName: string;
     channel: "telegram" | "whatsapp";
     userContact: string;
+  });
+
+  provisionAgent({
+    agentId: agent.id,
+    agentName: agent.name,
+    ownerId: agent.ownerId,
+    telegramBotToken: body.telegramBotToken,
   });
 
   agents.set(agent.id, agent);
