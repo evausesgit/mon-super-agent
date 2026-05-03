@@ -4,15 +4,11 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "services/*",
-    "orchestration"
+    "services/*"
   ],
   "scripts": {
     "dev:web": "npm --workspace @mon-super-agent/web run dev",
     "dev:api": "npm --workspace @mon-super-agent/api run dev",
-    "orchestration:demo": "npm --workspace @mon-super-agent/orchestration run demo",
-    "orchestration:run-live": "npm --workspace @mon-super-agent/orchestration run run-live",
-    "orchestration:run-autonomous": "npm --workspace @mon-super-agent/orchestration run run-autonomous",
     "build": "npm run build --workspaces",
     "lint": "npm run lint --workspaces"
   },

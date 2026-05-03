@@ -101,4 +101,3 @@ Every orchestrated task should leave behind a concrete review surface in the rep
 For MVP delivery, the expected review artifacts are:
 - a changed file or set of changed files
 - a short execution summary in Notion
-- a run artifact under `orchestration/runs/` when the work was executed by the orchestrator
