@@ -20,6 +20,7 @@ const defaultValues = {
   agentName: "",
   userContact: "",
   channel: "telegram",
+  telegramBotToken: "",
 };
 
 export function AgentCreationForm() {
@@ -101,6 +102,31 @@ export function AgentCreationForm() {
             }
           />
         </label>
+
+        {formValues.channel === "telegram" ? (
+          <label>
+            Telegram Bot Token
+            <input
+              name="telegramBotToken"
+              placeholder="1234567890:AAxxxxxx"
+              required
+              value={formValues.telegramBotToken}
+              onChange={(event) =>
+                setFormValues((current) => ({
+                  ...current,
+                  telegramBotToken: event.target.value,
+                }))
+              }
+            />
+            <small>
+              Obtiens ton token sur{" "}
+              <a href="https://t.me/BotFather" rel="noreferrer" target="_blank">
+                @BotFather
+              </a>{" "}
+              -&gt; /newbot
+            </small>
+          </label>
+        ) : null}
 
         <fieldset>
           <legend>Preferred channel</legend>

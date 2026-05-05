@@ -1,3 +1,4 @@
+import { pathToFileURL } from "node:url";
 import cors from "@fastify/cors";
 import Fastify from "fastify";
 import {
@@ -7,7 +8,6 @@ import {
   type AgentRecord,
 } from "./db/agents.js";
 import { isGatewayRunning, startGateway } from "./hermes/gateway.js";
-import { createHermesProfile } from "./hermes/profile.js";
 import { createAgent, type CreateAgentResult } from "./routes/agents.js";
 
 type AgentApiResponse = Omit<CreateAgentResult, "status"> & {
@@ -15,87 +15,85 @@ type AgentApiResponse = Omit<CreateAgentResult, "status"> & {
   gatewayPid: number | null;
 };
 
-const app = Fastify({
-  logger: true,
-});
+export function buildApp() {
+  const app = Fastify({
+    logger: true,
+  });
 
-await app.register(cors, {
-  origin: true,
-});
+  app.register(cors, {
+    origin: true,
+  });
 
-app.get("/health", async () => {
-  return {
-    ok: true,
-    service: "mon-super-agent-api",
-  };
-});
-
-app.post("/agents", async (request, reply) => {
-  const body = request.body as {
-    agentName?: string;
-    channel?: "telegram" | "whatsapp";
-    userContact?: string;
-    telegramBotToken?: string;
-  };
-
-  if (
-    !body.agentName ||
-    !body.channel ||
-    !body.userContact ||
-    !body.telegramBotToken
-  ) {
-    reply.code(400);
+  app.get("/health", async () => {
     return {
-      error:
-        "Missing required fields: agentName, channel, userContact, telegramBotToken",
+      ok: true,
+      service: "mon-super-agent-api",
     };
-  }
-
-  const agent = createAgent(body as {
-    agentName: string;
-    channel: "telegram" | "whatsapp";
-    userContact: string;
   });
 
-  createHermesProfile({
-    agentId: agent.id,
-    agentName: agent.name,
-    ownerId: agent.ownerId,
-    telegramBotToken: body.telegramBotToken,
-  });
+  app.post("/agents", async (request, reply) => {
+    const body = request.body as {
+      agentName?: string;
+      channel?: "telegram" | "whatsapp";
+      userContact?: string;
+      telegramBotToken?: string;
+    };
 
-  insertAgent({
-    id: agent.id,
-    name: agent.name,
-    ownerId: agent.ownerId,
-    channel: agent.channel,
-    gatewayStatus: "provisioning",
-  });
+    if (
+      !body.agentName ||
+      !body.channel ||
+      !body.userContact ||
+      !body.telegramBotToken
+    ) {
+      reply.code(400);
+      return {
+        error:
+          "Missing required fields: agentName, channel, userContact, telegramBotToken",
+      };
+    }
 
-  const gateway = startGateway(agent.id);
-  updateGatewayStatus(agent.id, gateway.pid, "active");
+    const agent = createAgent(body as {
+      agentName: string;
+      channel: "telegram" | "whatsapp";
+      userContact: string;
+      telegramBotToken: string;
+    });
 
-  reply.code(201);
-  return {
-    ...agent,
-    status: "active",
-    gatewayPid: gateway.pid,
-  };
-});
+    insertAgent({
+      id: agent.id,
+      name: agent.name,
+      ownerId: agent.ownerId,
+      channel: agent.channel,
+      gatewayStatus: "provisioning",
+    });
 
-app.get("/agents/:id", async (request, reply) => {
-  const params = request.params as { id: string };
-  const agent = getAgentById(params.id);
+    const gateway = startGateway(agent.id);
+    updateGatewayStatus(agent.id, gateway.pid, "active");
 
-  if (!agent) {
-    reply.code(404);
+    reply.code(201);
     return {
-      error: "Agent not found",
+      ...agent,
+      status: "active",
+      gatewayPid: gateway.pid,
     };
-  }
+  });
 
-  return toAgentResponse(refreshGatewayStatus(agent));
-});
+  app.get("/agents/:id", async (request, reply) => {
+    const params = request.params as { id: string };
+    const agent = getAgentById(params.id);
+
+    if (!agent) {
+      reply.code(404);
+      return {
+        error: "Agent not found",
+      };
+    }
+
+    return toAgentResponse(refreshGatewayStatus(agent));
+  });
+
+  return app;
+}
 
 function refreshGatewayStatus(agent: AgentRecord): AgentRecord {
   if (agent.gatewayPid === null) {
@@ -136,10 +134,14 @@ function toAgentResponse(agent: AgentRecord): AgentApiResponse {
 
 const port = Number(process.env.PORT ?? 4000);
 
-app.listen({
-  port,
-  host: "0.0.0.0",
-}).catch((error) => {
-  app.log.error(error);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const app = buildApp();
+
+  app.listen({
+    port,
+    host: "0.0.0.0",
+  }).catch((error) => {
+    app.log.error(error);
+    process.exit(1);
+  });
+}

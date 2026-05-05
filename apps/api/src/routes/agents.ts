@@ -1,9 +1,11 @@
 import { createAgentProfile, type AgentProfile } from "@mon-super-agent/agent-runtime";
+import { createHermesProfile } from "../hermes/profile.js";
 
 export type CreateAgentInput = {
   agentName: string;
   channel: "telegram" | "whatsapp";
   userContact: string;
+  telegramBotToken: string;
 };
 
 export type CreateAgentResult = AgentProfile & {
@@ -17,6 +19,13 @@ export function createAgent(input: CreateAgentInput): CreateAgentResult {
     name: input.agentName.trim(),
     ownerId: input.userContact,
     channel: input.channel,
+  });
+
+  createHermesProfile({
+    agentId: profile.id,
+    agentName: profile.name,
+    ownerId: profile.ownerId,
+    telegramBotToken: input.telegramBotToken,
   });
 
   return {
