@@ -52,12 +52,25 @@ export function buildApp() {
       };
     }
 
-    const agent = createAgent(body as {
-      agentName: string;
-      channel: "telegram" | "whatsapp";
-      userContact: string;
-      telegramBotToken: string;
-    });
+    let agent: CreateAgentResult;
+
+    try {
+      agent = await createAgent(body as {
+        agentName: string;
+        channel: "telegram" | "whatsapp";
+        userContact: string;
+        telegramBotToken: string;
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "Invalid Telegram bot token") {
+        reply.code(400);
+        return {
+          error: "Invalid Telegram bot token",
+        };
+      }
+
+      throw error;
+    }
 
     insertAgent({
       id: agent.id,

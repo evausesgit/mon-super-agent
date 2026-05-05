@@ -1,5 +1,5 @@
 import { createAgentProfile, type AgentProfile } from "@mon-super-agent/agent-runtime";
-import { createHermesProfile } from "../hermes/profile.js";
+import { createHermesProfile, getBotUsername } from "../hermes/profile.js";
 
 export type CreateAgentInput = {
   agentName: string;
@@ -12,13 +12,22 @@ export type CreateAgentResult = AgentProfile & {
   recommendedChannel: "telegram" | "whatsapp";
 };
 
-export function createAgent(input: CreateAgentInput): CreateAgentResult {
+export async function createAgent(input: CreateAgentInput): Promise<CreateAgentResult> {
   const id = createHermesAgentId(input.agentName);
+  let botUsername: string;
+
+  try {
+    botUsername = await getBotUsername(input.telegramBotToken);
+  } catch {
+    throw new Error("Invalid Telegram bot token");
+  }
+
   const profile = createAgentProfile({
     id,
     name: input.agentName.trim(),
     ownerId: input.userContact,
     channel: input.channel,
+    activationTarget: `https://t.me/${botUsername}`,
   });
 
   createHermesProfile({

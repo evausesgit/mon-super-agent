@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { insertAgent, updateGatewayStatus } from "../db/agents.js";
 import { startGateway } from "../hermes/gateway.js";
-import { createHermesProfile } from "../hermes/profile.js";
+import { createHermesProfile, getBotUsername } from "../hermes/profile.js";
 import { buildApp } from "../index.js";
 import { createAgent } from "./agents.js";
 
@@ -19,23 +19,27 @@ vi.mock("../hermes/gateway.js", () => ({
 
 vi.mock("../hermes/profile.js", () => ({
   createHermesProfile: vi.fn(),
+  getBotUsername: vi.fn(),
 }));
 
 const createHermesProfileMock = vi.mocked(createHermesProfile);
+const getBotUsernameMock = vi.mocked(getBotUsername);
 const insertAgentMock = vi.mocked(insertAgent);
 const startGatewayMock = vi.mocked(startGateway);
 const updateGatewayStatusMock = vi.mocked(updateGatewayStatus);
 
 beforeEach(() => {
   createHermesProfileMock.mockClear();
+  getBotUsernameMock.mockReset();
+  getBotUsernameMock.mockResolvedValue("mybot");
   insertAgentMock.mockClear();
   startGatewayMock.mockClear();
   updateGatewayStatusMock.mockClear();
 });
 
 describe("createAgent", () => {
-  it("generates an id from the name", () => {
-    const result = createAgent({
+  it("generates an id from the name", async () => {
+    const result = await createAgent({
       agentName: "Nova",
       channel: "telegram",
       userContact: "@eva",
@@ -44,6 +48,8 @@ describe("createAgent", () => {
 
     expect(result.id).toMatch(/^agent-nova-/);
     expect(result.name).toBe("Nova");
+    expect(result.activationTarget).toBe("https://t.me/mybot");
+    expect(getBotUsernameMock).toHaveBeenCalledWith("1234567890:AAxxxxxx");
     expect(createHermesProfileMock).toHaveBeenCalledWith({
       agentId: result.id,
       agentName: "Nova",
@@ -118,6 +124,8 @@ describe("POST /agents", () => {
 
     expect(response.statusCode).toBe(201);
     expect(body.id).toMatch(/^agent-nova-/);
+    expect(body.activationTarget).toBe("https://t.me/mybot");
+    expect(getBotUsernameMock).toHaveBeenCalledWith("1234567890:AAxxxxxx");
     expect(createHermesProfileMock).toHaveBeenCalledWith({
       agentId: body.id,
       agentName: "Nova",
@@ -133,6 +141,32 @@ describe("POST /agents", () => {
     });
     expect(startGatewayMock).toHaveBeenCalledWith(body.id);
     expect(updateGatewayStatusMock).toHaveBeenCalledWith(body.id, 1234, "active");
+
+    await app.close();
+  });
+
+  it("returns 400 with an invalid telegramBotToken", async () => {
+    getBotUsernameMock.mockRejectedValue(new Error("Telegram getMe failed: 401"));
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/agents",
+      payload: {
+        agentName: "Nova",
+        channel: "telegram",
+        userContact: "@eva",
+        telegramBotToken: "bad-token",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: "Invalid Telegram bot token",
+    });
+    expect(createHermesProfileMock).not.toHaveBeenCalled();
+    expect(insertAgentMock).not.toHaveBeenCalled();
+    expect(startGatewayMock).not.toHaveBeenCalled();
 
     await app.close();
   });

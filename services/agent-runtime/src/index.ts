@@ -18,6 +18,7 @@ export function createAgentProfile(input: {
   name: string;
   ownerId: string;
   channel: "telegram" | "whatsapp";
+  activationTarget?: string;
 }): AgentProfile {
   const normalizedOwner = input.ownerId.trim();
 
@@ -28,9 +29,10 @@ export function createAgentProfile(input: {
     channel: input.channel,
     status: input.channel === "telegram" ? "ready" : "pending_verification",
     activationTarget:
-      input.channel === "telegram"
+      input.activationTarget ??
+      (input.channel === "telegram"
         ? `https://t.me/${normalizedOwner.replace(/^@/, "")}`
-        : normalizedOwner,
+        : normalizedOwner),
     nextStep:
       input.channel === "telegram"
         ? "Open Telegram and start the first conversation with your agent."

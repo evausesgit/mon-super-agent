@@ -12,6 +12,25 @@ export type CreateHermesProfileInput = {
   telegramBotToken: string;
 };
 
+export async function getBotUsername(botToken: string): Promise<string> {
+  const res = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
+
+  if (!res.ok) {
+    throw new Error(`Telegram getMe failed: ${res.status}`);
+  }
+
+  const data = (await res.json()) as {
+    ok: boolean;
+    result: { username: string };
+  };
+
+  if (!data.ok) {
+    throw new Error("Telegram getMe returned ok=false");
+  }
+
+  return data.result.username;
+}
+
 export function createHermesProfile(input: CreateHermesProfileInput): void {
   if (!HERMES_AGENT_ID_PATTERN.test(input.agentId)) {
     throw new Error(
