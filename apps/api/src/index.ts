@@ -1,12 +1,15 @@
 import { pathToFileURL } from "node:url";
 import cors from "@fastify/cors";
+import { PhoneNumberValidationError } from "@mon-super-agent/agent-runtime";
 import Fastify from "fastify";
 import {
   getAgentById,
   insertAgent,
+  listAgentsByPhoneNumber,
   updateGatewayStatus,
   type AgentRecord,
 } from "./db/agents.js";
+import { createOrResolveProfileByPhoneNumber } from "./db/profiles.js";
 import { isGatewayRunning, startGateway } from "./hermes/gateway.js";
 import { createAgent, type CreateAgentResult } from "./routes/agents.js";
 
@@ -29,6 +32,32 @@ export function buildApp() {
       ok: true,
       service: "mon-super-agent-api",
     };
+  });
+
+  app.post("/profiles", async (request, reply) => {
+    const body = request.body as {
+      phoneNumber?: string;
+    };
+
+    if (!body.phoneNumber) {
+      reply.code(400);
+      return {
+        error: "Missing required field: phoneNumber",
+      };
+    }
+
+    try {
+      return createOrResolveProfileByPhoneNumber(body.phoneNumber);
+    } catch (error) {
+      if (error instanceof PhoneNumberValidationError) {
+        reply.code(400);
+        return {
+          error: error.message,
+        };
+      }
+
+      throw error;
+    }
   });
 
   app.post("/agents", async (request, reply) => {
@@ -54,16 +83,32 @@ export function buildApp() {
       };
     }
 
+    let ownerId: string;
+
+    try {
+      const profile = createOrResolveProfileByPhoneNumber(body.userContact);
+      ownerId = profile.id;
+    } catch (error) {
+      if (error instanceof PhoneNumberValidationError) {
+        reply.code(400);
+        return {
+          error: error.message,
+        };
+      }
+
+      throw error;
+    }
+
     let agent: CreateAgentResult;
 
     try {
-      agent = await createAgent(body as {
-        agentName: string;
-        channel: "telegram" | "whatsapp";
-        userContact: string;
-        telegramBotToken: string;
-        provider?: string;
-        model?: string;
+      agent = await createAgent({
+        agentName: body.agentName,
+        channel: body.channel,
+        userContact: ownerId,
+        telegramBotToken: body.telegramBotToken,
+        provider: body.provider,
+        model: body.model,
       });
     } catch (error) {
       if (error instanceof Error && error.message === "Invalid Telegram bot token") {
@@ -106,6 +151,36 @@ export function buildApp() {
       status: "active",
       gatewayPid: gateway.pid,
     };
+  });
+
+  app.get("/agents", async (request, reply) => {
+    const query = request.query as {
+      phoneNumber?: string;
+    };
+
+    if (!query.phoneNumber) {
+      reply.code(400);
+      return {
+        error: "Missing required query parameter: phoneNumber",
+      };
+    }
+
+    try {
+      return {
+        agents: listAgentsByPhoneNumber(query.phoneNumber).map((agent) =>
+          toAgentResponse(refreshGatewayStatus(agent)),
+        ),
+      };
+    } catch (error) {
+      if (error instanceof PhoneNumberValidationError) {
+        reply.code(400);
+        return {
+          error: error.message,
+        };
+      }
+
+      throw error;
+    }
   });
 
   app.get("/agents/:id", async (request, reply) => {

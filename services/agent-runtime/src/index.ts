@@ -9,6 +9,13 @@ export type AgentRuntimeConfig = {
   model: AgentModel;
 };
 
+export class PhoneNumberValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PhoneNumberValidationError";
+  }
+}
+
 const supportedModelsByProvider = {
   anthropic: [DEFAULT_AGENT_MODEL],
   codex: ["gpt-5.4"],
@@ -48,6 +55,30 @@ export function getSupportedModelsForProvider(
   provider: AgentProvider,
 ): AgentModel[] {
   return [...supportedModelsByProvider[provider]];
+}
+
+export function normalizePhoneNumber(phoneNumber: string): string {
+  const trimmed = phoneNumber.trim();
+
+  if (!trimmed) {
+    throw new PhoneNumberValidationError("Phone number is required");
+  }
+
+  if (!trimmed.startsWith("+")) {
+    throw new PhoneNumberValidationError(
+      "Phone number must include an international country code, for example +14155552671",
+    );
+  }
+
+  const normalized = `+${trimmed.slice(1).replace(/[()\s.-]/g, "")}`;
+
+  if (!/^\+[1-9]\d{7,14}$/.test(normalized)) {
+    throw new PhoneNumberValidationError(
+      "Phone number must be a valid E.164 number with 8 to 15 digits after the country code",
+    );
+  }
+
+  return normalized;
 }
 
 function getDefaultModelForProvider(provider: AgentProvider): AgentModel {

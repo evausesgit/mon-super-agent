@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getAgentById, insertAgent, updateGatewayStatus } from "../db/agents.js";
+import { normalizePhoneNumber } from "@mon-super-agent/agent-runtime";
+import {
+  getAgentById,
+  insertAgent,
+  listAgentsByPhoneNumber,
+  updateGatewayStatus,
+} from "../db/agents.js";
+import { createOrResolveProfileByPhoneNumber } from "../db/profiles.js";
 import { isGatewayRunning, startGateway } from "../hermes/gateway.js";
 import { createHermesProfile, getBotUsername } from "../hermes/profile.js";
 import { buildApp } from "../index.js";
@@ -9,8 +16,25 @@ import { createAgent } from "./agents.js";
 vi.mock("../db/agents.js", () => ({
   getAgentById: vi.fn(),
   insertAgent: vi.fn(),
+  listAgentsByPhoneNumber: vi.fn(),
   updateGatewayStatus: vi.fn(),
 }));
+
+vi.mock("../db/profiles.js", async () => {
+  const runtime = await import("@mon-super-agent/agent-runtime");
+
+  return {
+    createOrResolveProfileByPhoneNumber: vi.fn((phoneNumber: string) => {
+      const normalizedPhoneNumber = runtime.normalizePhoneNumber(phoneNumber);
+
+      return {
+        id: normalizedPhoneNumber,
+        phoneNumber: normalizedPhoneNumber,
+        createdAt: 1_714_000_000_000,
+      };
+    }),
+  };
+});
 
 vi.mock("../hermes/gateway.js", () => ({
   isGatewayRunning: vi.fn(),
@@ -26,6 +50,10 @@ const createHermesProfileMock = vi.mocked(createHermesProfile);
 const getBotUsernameMock = vi.mocked(getBotUsername);
 const getAgentByIdMock = vi.mocked(getAgentById);
 const insertAgentMock = vi.mocked(insertAgent);
+const listAgentsByPhoneNumberMock = vi.mocked(listAgentsByPhoneNumber);
+const createOrResolveProfileByPhoneNumberMock = vi.mocked(
+  createOrResolveProfileByPhoneNumber,
+);
 const isGatewayRunningMock = vi.mocked(isGatewayRunning);
 const startGatewayMock = vi.mocked(startGateway);
 const updateGatewayStatusMock = vi.mocked(updateGatewayStatus);
@@ -35,6 +63,12 @@ beforeEach(() => {
   getBotUsernameMock.mockReset();
   getBotUsernameMock.mockResolvedValue("mybot");
   getAgentByIdMock.mockReset();
+  listAgentsByPhoneNumberMock.mockReset();
+  listAgentsByPhoneNumberMock.mockImplementation((phoneNumber: string) => {
+    normalizePhoneNumber(phoneNumber);
+    return [];
+  });
+  createOrResolveProfileByPhoneNumberMock.mockClear();
   insertAgentMock.mockClear();
   isGatewayRunningMock.mockReset();
   isGatewayRunningMock.mockReturnValue(true);
@@ -47,7 +81,7 @@ describe("createAgent", () => {
     const result = await createAgent({
       agentName: "Nova",
       channel: "telegram",
-      userContact: "@eva",
+      userContact: "+1 (415) 555-2671",
       telegramBotToken: "1234567890:AAxxxxxx",
     });
 
@@ -58,7 +92,7 @@ describe("createAgent", () => {
     expect(createHermesProfileMock).toHaveBeenCalledWith({
       agentId: result.id,
       agentName: "Nova",
-      ownerId: "@eva",
+      ownerId: "+14155552671",
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
@@ -69,7 +103,7 @@ describe("createAgent", () => {
     const result = await createAgent({
       agentName: "Nova",
       channel: "telegram",
-      userContact: "@eva",
+      userContact: "+1 (415) 555-2671",
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "codex",
       model: "gpt-5.4",
@@ -80,7 +114,7 @@ describe("createAgent", () => {
     expect(createHermesProfileMock).toHaveBeenCalledWith({
       agentId: result.id,
       agentName: "Nova",
-      ownerId: "@eva",
+      ownerId: "+14155552671",
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "codex",
       model: "gpt-5.4",
@@ -93,7 +127,7 @@ describe("GET /agents/:id", () => {
     getAgentByIdMock.mockReturnValue({
       id: "agent-codex",
       name: "Codex",
-      ownerId: "@eva",
+      ownerId: "+14155552671",
       channel: "telegram",
       provider: "codex",
       model: "gpt-5.4",
@@ -117,6 +151,81 @@ describe("GET /agents/:id", () => {
 
     await app.close();
   });
+
+  it("continues to read legacy agents without phone-number profiles", async () => {
+    getAgentByIdMock.mockReturnValue({
+      id: "agent-legacy",
+      name: "Legacy",
+      ownerId: "@eva",
+      channel: "telegram",
+      provider: "anthropic",
+      model: "anthropic/claude-sonnet-4-6",
+      gatewayPid: null,
+      gatewayStatus: "active",
+      createdAt: 1_714_000_000_000,
+    });
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/agents/agent-legacy",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      id: "agent-legacy",
+      ownerId: "@eva",
+      status: "active",
+    });
+
+    await app.close();
+  });
+});
+
+describe("POST /profiles", () => {
+  it("creates or resolves a profile from a phone number", async () => {
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/profiles",
+      payload: {
+        phoneNumber: "+1 (415) 555-2671",
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      id: "+14155552671",
+      phoneNumber: "+14155552671",
+      createdAt: 1_714_000_000_000,
+    });
+    expect(createOrResolveProfileByPhoneNumberMock).toHaveBeenCalledWith(
+      "+1 (415) 555-2671",
+    );
+
+    await app.close();
+  });
+
+  it("returns 400 for an ambiguous phone number", async () => {
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/profiles",
+      payload: {
+        phoneNumber: "415-555-2671",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error:
+        "Phone number must include an international country code, for example +14155552671",
+    });
+
+    await app.close();
+  });
 });
 
 describe("POST /agents", () => {
@@ -129,7 +238,7 @@ describe("POST /agents", () => {
       payload: {
         agentName: "Nova",
         channel: "telegram",
-        userContact: "@eva",
+        userContact: "+14155552671",
       },
     });
 
@@ -151,7 +260,7 @@ describe("POST /agents", () => {
       url: "/agents",
       payload: {
         channel: "telegram",
-        userContact: "@eva",
+        userContact: "+14155552671",
         telegramBotToken: "1234567890:AAxxxxxx",
       },
     });
@@ -175,7 +284,7 @@ describe("POST /agents", () => {
       payload: {
         agentName: "Nova",
         channel: "telegram",
-        userContact: "@eva",
+        userContact: "+1 (415) 555-2671",
         telegramBotToken: "1234567890:AAxxxxxx",
       },
     });
@@ -185,11 +294,14 @@ describe("POST /agents", () => {
     expect(response.statusCode).toBe(201);
     expect(body.id).toMatch(/^agent-nova-/);
     expect(body.activationTarget).toBe("https://t.me/mybot");
+    expect(createOrResolveProfileByPhoneNumberMock).toHaveBeenCalledWith(
+      "+1 (415) 555-2671",
+    );
     expect(getBotUsernameMock).toHaveBeenCalledWith("1234567890:AAxxxxxx");
     expect(createHermesProfileMock).toHaveBeenCalledWith({
       agentId: body.id,
       agentName: "Nova",
-      ownerId: "@eva",
+      ownerId: "+14155552671",
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
@@ -197,7 +309,7 @@ describe("POST /agents", () => {
     expect(insertAgentMock).toHaveBeenCalledWith({
       id: body.id,
       name: "Nova",
-      ownerId: "@eva",
+      ownerId: "+14155552671",
       channel: "telegram",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
@@ -205,6 +317,33 @@ describe("POST /agents", () => {
     });
     expect(startGatewayMock).toHaveBeenCalledWith(body.id);
     expect(updateGatewayStatusMock).toHaveBeenCalledWith(body.id, 1234, "active");
+
+    await app.close();
+  });
+
+  it("returns 400 for invalid phone numbers without creating partial agent records", async () => {
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/agents",
+      payload: {
+        agentName: "Nova",
+        channel: "telegram",
+        userContact: "415-555-2671",
+        telegramBotToken: "1234567890:AAxxxxxx",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error:
+        "Phone number must include an international country code, for example +14155552671",
+    });
+    expect(getBotUsernameMock).not.toHaveBeenCalled();
+    expect(createHermesProfileMock).not.toHaveBeenCalled();
+    expect(insertAgentMock).not.toHaveBeenCalled();
+    expect(startGatewayMock).not.toHaveBeenCalled();
 
     await app.close();
   });
@@ -219,7 +358,7 @@ describe("POST /agents", () => {
       payload: {
         agentName: "Nova",
         channel: "telegram",
-        userContact: "@eva",
+        userContact: "+14155552671",
         telegramBotToken: "bad-token",
       },
     });
@@ -244,7 +383,7 @@ describe("POST /agents", () => {
       payload: {
         agentName: "Nova",
         channel: "telegram",
-        userContact: "@eva",
+        userContact: "+14155552671",
         telegramBotToken: "1234567890:AAxxxxxx",
         provider: "codex",
         model: "gpt-5.4",
@@ -259,7 +398,7 @@ describe("POST /agents", () => {
     expect(createHermesProfileMock).toHaveBeenCalledWith({
       agentId: body.id,
       agentName: "Nova",
-      ownerId: "@eva",
+      ownerId: "+14155552671",
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "codex",
       model: "gpt-5.4",
@@ -267,7 +406,7 @@ describe("POST /agents", () => {
     expect(insertAgentMock).toHaveBeenCalledWith({
       id: body.id,
       name: "Nova",
-      ownerId: "@eva",
+      ownerId: "+14155552671",
       channel: "telegram",
       provider: "codex",
       model: "gpt-5.4",
@@ -287,7 +426,7 @@ describe("POST /agents", () => {
       payload: {
         agentName: "Nova",
         channel: "telegram",
-        userContact: "@eva",
+        userContact: "+14155552671",
         telegramBotToken: "1234567890:AAxxxxxx",
         provider: "openai",
         model: "gpt-5.4",
@@ -315,7 +454,7 @@ describe("POST /agents", () => {
       payload: {
         agentName: "Nova",
         channel: "telegram",
-        userContact: "@eva",
+        userContact: "+14155552671",
         telegramBotToken: "1234567890:AAxxxxxx",
         provider: "codex",
         model: "anthropic/claude-sonnet-4-6",
@@ -330,6 +469,96 @@ describe("POST /agents", () => {
     expect(createHermesProfileMock).not.toHaveBeenCalled();
     expect(insertAgentMock).not.toHaveBeenCalled();
     expect(startGatewayMock).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+});
+
+describe("GET /agents", () => {
+  it("lists all agents for one phone-number profile without cross-user leakage", async () => {
+    listAgentsByPhoneNumberMock.mockReturnValue([
+      {
+        id: "agent-alpha",
+        name: "Alpha",
+        ownerId: "+14155552671",
+        channel: "telegram",
+        provider: "anthropic",
+        model: "anthropic/claude-sonnet-4-6",
+        gatewayPid: 1234,
+        gatewayStatus: "active",
+        createdAt: 1,
+      },
+      {
+        id: "agent-beta",
+        name: "Beta",
+        ownerId: "+14155552671",
+        channel: "telegram",
+        provider: "codex",
+        model: "gpt-5.4",
+        gatewayPid: 5678,
+        gatewayStatus: "active",
+        createdAt: 2,
+      },
+    ]);
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/agents?phoneNumber=%2B1%20(415)%20555-2671",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(listAgentsByPhoneNumberMock).toHaveBeenCalledWith(
+      "+1 (415) 555-2671",
+    );
+    expect(response.json()).toMatchObject({
+      agents: [
+        {
+          id: "agent-alpha",
+          ownerId: "+14155552671",
+        },
+        {
+          id: "agent-beta",
+          ownerId: "+14155552671",
+        },
+      ],
+    });
+
+    await app.close();
+  });
+
+  it("queries a different phone number with its own normalized owner id", async () => {
+    listAgentsByPhoneNumberMock.mockReturnValue([]);
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/agents?phoneNumber=%2B44%2020%207183%208750",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(listAgentsByPhoneNumberMock).toHaveBeenCalledWith("+44 20 7183 8750");
+    expect(response.json()).toEqual({
+      agents: [],
+    });
+
+    await app.close();
+  });
+
+  it("rejects invalid phone-number filters", async () => {
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/agents?phoneNumber=415-555-2671",
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error:
+        "Phone number must include an international country code, for example +14155552671",
+    });
+    expect(listAgentsByPhoneNumberMock).toHaveBeenCalledWith("415-555-2671");
 
     await app.close();
   });

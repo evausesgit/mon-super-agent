@@ -1,6 +1,7 @@
 import {
   DEFAULT_AGENT_MODEL,
   DEFAULT_AGENT_PROVIDER,
+  normalizePhoneNumber,
   type AgentModel,
   type AgentProvider,
 } from "@mon-super-agent/agent-runtime";
@@ -85,6 +86,24 @@ export function getAgentById(
     .get(id) as AgentRow | undefined;
 
   return row ? mapAgentRow(row) : undefined;
+}
+
+export function listAgentsByOwnerId(
+  ownerId: string,
+  database: AgentDatabase = getAgentDatabase(),
+): AgentRecord[] {
+  const rows = database
+    .prepare("SELECT * FROM agents WHERE owner_id = ? ORDER BY created_at ASC")
+    .all(ownerId) as AgentRow[];
+
+  return rows.map(mapAgentRow);
+}
+
+export function listAgentsByPhoneNumber(
+  phoneNumber: string,
+  database: AgentDatabase = getAgentDatabase(),
+): AgentRecord[] {
+  return listAgentsByOwnerId(normalizePhoneNumber(phoneNumber), database);
 }
 
 export function updateGatewayStatus(

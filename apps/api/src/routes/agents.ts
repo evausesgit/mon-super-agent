@@ -1,4 +1,8 @@
-import { createAgentProfile, type AgentProfile } from "@mon-super-agent/agent-runtime";
+import {
+  createAgentProfile,
+  normalizePhoneNumber,
+  type AgentProfile,
+} from "@mon-super-agent/agent-runtime";
 import { createHermesProfile, getBotUsername } from "../hermes/profile.js";
 
 export type CreateAgentInput = {
@@ -16,6 +20,7 @@ export type CreateAgentResult = AgentProfile & {
 
 export async function createAgent(input: CreateAgentInput): Promise<CreateAgentResult> {
   const id = createHermesAgentId(input.agentName);
+  const ownerId = normalizePhoneNumber(input.userContact);
   let botUsername: string;
 
   try {
@@ -27,7 +32,7 @@ export async function createAgent(input: CreateAgentInput): Promise<CreateAgentR
   const profile = createAgentProfile({
     id,
     name: input.agentName.trim(),
-    ownerId: input.userContact,
+    ownerId,
     channel: input.channel,
     provider: input.provider,
     model: input.model,
