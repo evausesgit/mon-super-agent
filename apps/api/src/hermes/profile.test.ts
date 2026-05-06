@@ -1,9 +1,19 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getBotUsername } from "./profile.js";
+import { execSync } from "node:child_process";
+import { createHermesProfile, getBotUsername } from "./profile.js";
+
+vi.mock("node:child_process", () => ({
+  execSync: vi.fn(),
+}));
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  vi.mocked(execSync).mockClear();
 });
 
 describe("getBotUsername", () => {
@@ -44,5 +54,31 @@ describe("getBotUsername", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
 
     await expect(getBotUsername("bad-token")).rejects.toThrow("Network error");
+  });
+});
+
+describe("createHermesProfile", () => {
+  it("writes the selected provider and model to the Hermes config", () => {
+    const hermesHome = fs.mkdtempSync(path.join(os.tmpdir(), "hermes-profile-"));
+    vi.stubEnv("HERMES_HOME", hermesHome);
+
+    createHermesProfile({
+      agentId: "agent-codex",
+      agentName: "Codex",
+      ownerId: "@eva",
+      telegramBotToken: "1234567890:AAxxxxxx",
+      provider: "codex",
+      model: "gpt-5.4",
+    });
+
+    expect(
+      fs.readFileSync(
+        path.join(hermesHome, "profiles", "agent-codex", "config.yaml"),
+        "utf8",
+      ),
+    ).toContain(`model:
+  default: gpt-5.4
+  provider: codex
+`);
   });
 });

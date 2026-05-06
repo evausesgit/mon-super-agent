@@ -10,6 +10,8 @@ export type CreateHermesProfileInput = {
   agentName: string;
   ownerId: string;
   telegramBotToken: string;
+  provider: string;
+  model: string;
 };
 
 export async function getBotUsername(botToken: string): Promise<string> {
@@ -49,8 +51,8 @@ export function createHermesProfile(input: CreateHermesProfileInput): void {
   fs.writeFileSync(
     path.join(profileDir, "config.yaml"),
     `model:
-  default: anthropic/claude-sonnet-4-6
-  provider: anthropic
+  default: ${input.model}
+  provider: ${input.provider}
 toolsets:
 - hermes-cli
 agent:

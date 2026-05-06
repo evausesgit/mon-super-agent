@@ -8,6 +8,8 @@ type AgentCreationResponse = {
   name: string;
   status: "ready" | "pending_verification";
   recommendedChannel: "telegram" | "whatsapp";
+  provider: "anthropic" | "codex";
+  model: "anthropic/claude-sonnet-4-6" | "gpt-5.4";
   nextStep: string;
   activationTarget: string;
 };
@@ -21,6 +23,8 @@ const defaultValues = {
   userContact: "",
   channel: "telegram",
   telegramBotToken: "",
+  provider: "anthropic",
+  model: "anthropic/claude-sonnet-4-6",
 };
 
 export function AgentCreationForm() {
@@ -170,6 +174,50 @@ export function AgentCreationForm() {
           </label>
         </fieldset>
 
+        <fieldset>
+          <legend>Runtime provider</legend>
+
+          <label className="choice-card">
+            <input
+              checked={formValues.provider === "anthropic"}
+              name="provider"
+              type="radio"
+              value="anthropic"
+              onChange={() =>
+                setFormValues((current) => ({
+                  ...current,
+                  provider: "anthropic",
+                  model: "anthropic/claude-sonnet-4-6",
+                }))
+              }
+            />
+            <div>
+              <strong>Anthropic</strong>
+              <span>claude-sonnet-4-6</span>
+            </div>
+          </label>
+
+          <label className="choice-card">
+            <input
+              checked={formValues.provider === "codex"}
+              name="provider"
+              type="radio"
+              value="codex"
+              onChange={() =>
+                setFormValues((current) => ({
+                  ...current,
+                  provider: "codex",
+                  model: "gpt-5.4",
+                }))
+              }
+            />
+            <div>
+              <strong>Codex</strong>
+              <span>gpt-5.4</span>
+            </div>
+          </label>
+        </fieldset>
+
         <button className="primary-action submit-action" disabled={isPending} type="submit">
           {isPending ? "Creating..." : "Create my super agent"}
         </button>
@@ -190,6 +238,9 @@ export function AgentCreationForm() {
             </p>
             <p>
               Channel: <strong>{result.recommendedChannel}</strong>
+            </p>
+            <p>
+              Runtime: <strong>{result.provider}/{result.model}</strong>
             </p>
             <p>{result.nextStep}</p>
             {result.recommendedChannel === "telegram" ? (

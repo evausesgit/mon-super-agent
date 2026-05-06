@@ -55,7 +55,7 @@ Responsibilities:
 
 Needs:
 - stable agent identity per user
-- model abstraction
+- model abstraction with explicit provider/model metadata; current supported launch configs are Anthropic with `anthropic/claude-sonnet-4-6` and Codex with `gpt-5.4`
 - storage for configuration and history
 
 ### Messaging Connector Layer

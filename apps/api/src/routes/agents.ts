@@ -6,6 +6,8 @@ export type CreateAgentInput = {
   channel: "telegram" | "whatsapp";
   userContact: string;
   telegramBotToken: string;
+  provider?: string;
+  model?: string;
 };
 
 export type CreateAgentResult = AgentProfile & {
@@ -27,6 +29,8 @@ export async function createAgent(input: CreateAgentInput): Promise<CreateAgentR
     name: input.agentName.trim(),
     ownerId: input.userContact,
     channel: input.channel,
+    provider: input.provider,
+    model: input.model,
     activationTarget: `https://t.me/${botUsername}`,
   });
 
@@ -35,6 +39,8 @@ export async function createAgent(input: CreateAgentInput): Promise<CreateAgentR
     agentName: profile.name,
     ownerId: profile.ownerId,
     telegramBotToken: input.telegramBotToken,
+    provider: profile.provider,
+    model: profile.model,
   });
 
   return {

@@ -1,3 +1,9 @@
+import {
+  DEFAULT_AGENT_MODEL,
+  DEFAULT_AGENT_PROVIDER,
+  type AgentModel,
+  type AgentProvider,
+} from "@mon-super-agent/agent-runtime";
 import type { AgentDatabase } from "./schema.js";
 import { getAgentDatabase } from "./schema.js";
 
@@ -6,6 +12,8 @@ export type AgentRecord = {
   name: string;
   ownerId: string;
   channel: "telegram" | "whatsapp";
+  provider: AgentProvider;
+  model: AgentModel;
   gatewayPid: number | null;
   gatewayStatus: string;
   createdAt: number;
@@ -16,6 +24,8 @@ export type InsertAgentInput = {
   name: string;
   ownerId: string;
   channel: "telegram" | "whatsapp";
+  provider?: AgentProvider;
+  model?: AgentModel;
   gatewayPid?: number | null;
   gatewayStatus?: string;
   createdAt?: number;
@@ -26,6 +36,8 @@ type AgentRow = {
   name: string;
   owner_id: string;
   channel: "telegram" | "whatsapp";
+  provider: AgentProvider;
+  model: AgentModel;
   gateway_pid: number | null;
   gateway_status: string;
   created_at: number;
@@ -43,10 +55,12 @@ export function insertAgent(
           name,
           owner_id,
           channel,
+          provider,
+          model,
           gateway_pid,
           gateway_status,
           created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
     )
     .run(
@@ -54,6 +68,8 @@ export function insertAgent(
       agent.name,
       agent.ownerId,
       agent.channel,
+      agent.provider ?? DEFAULT_AGENT_PROVIDER,
+      agent.model ?? DEFAULT_AGENT_MODEL,
       agent.gatewayPid ?? null,
       agent.gatewayStatus ?? "provisioning",
       agent.createdAt ?? Date.now(),
@@ -94,6 +110,8 @@ function mapAgentRow(row: AgentRow): AgentRecord {
     name: row.name,
     ownerId: row.owner_id,
     channel: row.channel,
+    provider: row.provider,
+    model: row.model,
     gatewayPid: row.gateway_pid,
     gatewayStatus: row.gateway_status,
     createdAt: row.created_at,

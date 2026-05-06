@@ -28,9 +28,34 @@ describe("agent persistence", () => {
       name: "Nova",
       ownerId: "@eva",
       channel: "telegram",
+      provider: "anthropic",
+      model: "anthropic/claude-sonnet-4-6",
       gatewayPid: null,
       gatewayStatus: "provisioning",
       createdAt: 1_714_000_000_000,
+    });
+
+    database.close();
+  });
+
+  it("persists agent provider and model", () => {
+    const database = openAgentDatabase(":memory:");
+
+    insertAgent(
+      {
+        id: "agent-codex",
+        name: "Codex",
+        ownerId: "@eva",
+        channel: "telegram",
+        provider: "codex",
+        model: "gpt-5.4",
+      },
+      database,
+    );
+
+    expect(getAgentById("agent-codex", database)).toMatchObject({
+      provider: "codex",
+      model: "gpt-5.4",
     });
 
     database.close();

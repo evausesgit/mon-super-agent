@@ -8,6 +8,8 @@ type AgentRecord = {
   name: string;
   status: "ready" | "pending_verification";
   recommendedChannel: "telegram" | "whatsapp";
+  provider: "anthropic" | "codex";
+  model: "anthropic/claude-sonnet-4-6" | "gpt-5.4";
   nextStep: string;
   activationTarget: string;
 };
@@ -72,6 +74,9 @@ export function AgentDetail({ id }: { id: string }) {
               <p>
                 Channel: <strong>{agent.recommendedChannel}</strong>
               </p>
+              <p>
+                Runtime: <strong>{agent.provider}/{agent.model}</strong>
+              </p>
               <p>{agent.nextStep}</p>
               {agent.recommendedChannel === "telegram" ? (
                 <a
@@ -99,4 +104,3 @@ export function AgentDetail({ id }: { id: string }) {
     </main>
   );
 }
-

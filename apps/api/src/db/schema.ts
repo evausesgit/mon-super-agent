@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 type Statement = {
+  all(...params: unknown[]): unknown[];
   get(...params: unknown[]): unknown;
   run(...params: unknown[]): unknown;
 };
@@ -32,11 +33,23 @@ export function openAgentDatabase(
       name TEXT NOT NULL,
       owner_id TEXT NOT NULL,
       channel TEXT NOT NULL,
+      provider TEXT NOT NULL DEFAULT 'anthropic',
+      model TEXT NOT NULL DEFAULT 'anthropic/claude-sonnet-4-6',
       gateway_pid INTEGER,
       gateway_status TEXT NOT NULL DEFAULT 'provisioning',
       created_at INTEGER NOT NULL
     );
   `);
+  ensureAgentColumn(
+    database,
+    "provider",
+    "TEXT NOT NULL DEFAULT 'anthropic'",
+  );
+  ensureAgentColumn(
+    database,
+    "model",
+    "TEXT NOT NULL DEFAULT 'anthropic/claude-sonnet-4-6'",
+  );
 
   return database;
 }
@@ -68,6 +81,22 @@ function createDatabase(databasePath: string): AgentDatabase {
     };
     return new DatabaseSync(databasePath);
   }
+}
+
+function ensureAgentColumn(
+  database: AgentDatabase,
+  columnName: string,
+  columnDefinition: string,
+) {
+  const columns = database.prepare("PRAGMA table_info(agents)").all() as Array<{
+    name: string;
+  }>;
+
+  if (columns?.some((column) => column.name === columnName)) {
+    return;
+  }
+
+  database.exec(`ALTER TABLE agents ADD COLUMN ${columnName} ${columnDefinition}`);
 }
 
 function isMissingBetterSqlite3(error: unknown): boolean {
