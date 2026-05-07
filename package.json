@@ -13,7 +13,7 @@
     "typecheck": "npm run lint --workspaces",
     "lint": "npm run lint --workspaces",
     "test": "vitest run --reporter=verbose",
-    "start": "concurrently \"npm --workspace @mon-super-agent/api run start\" \"npm --workspace @mon-super-agent/web run start\""
+    "start": "concurrently \"PORT=4000 npm --workspace @mon-super-agent/api run start\" \"npm --workspace @mon-super-agent/web run start\""
   },
   "dependencies": {
     "concurrently": "^9.0.0"
