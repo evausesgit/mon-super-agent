@@ -12,7 +12,8 @@
     "build": "npm run build --workspaces",
     "typecheck": "npm run lint --workspaces",
     "lint": "npm run lint --workspaces",
-    "test": "vitest run --reporter=verbose"
+    "test": "vitest run --reporter=verbose",
+    "start": "npm --workspace @mon-super-agent/api run start"
   },
   "devDependencies": {
     "vitest": "^2.1.8"
