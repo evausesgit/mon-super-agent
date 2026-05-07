@@ -1,7 +1,7 @@
-import { execSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { spawnHermesSync } from "./target.js";
 
 const HERMES_AGENT_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 
@@ -44,7 +44,11 @@ export function createHermesProfile(input: CreateHermesProfileInput): void {
     process.env.HERMES_HOME ?? path.join(os.homedir(), ".hermes");
   const profileDir = path.join(hermesRoot, "profiles", input.agentId);
 
-  execSync(`hermes profile create ${input.agentId}`, { stdio: "inherit" });
+  const result = spawnHermesSync(["profile", "create", input.agentId], { stdio: "pipe" });
+  if (result.status !== 0) {
+    const stderr = result.stderr?.toString().trim() ?? "";
+    throw new Error(`hermes profile create failed: ${stderr}`);
+  }
 
   fs.mkdirSync(profileDir, { recursive: true });
 
