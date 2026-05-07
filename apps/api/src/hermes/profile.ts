@@ -47,7 +47,8 @@ export function createHermesProfile(input: CreateHermesProfileInput): void {
   const result = spawnHermesSync(["profile", "create", input.agentId], { stdio: "pipe" });
   if (result.status !== 0) {
     const stderr = result.stderr?.toString().trim() ?? "";
-    throw new Error(`hermes profile create failed: ${stderr}`);
+    const spawnError = (result as { error?: Error }).error?.message ?? "";
+    throw new Error(`hermes profile create failed (bin: ${process.env.HERMES_BIN ?? "/home/geekette/.local/bin/hermes"}): ${stderr || spawnError}`);
   }
 
   fs.mkdirSync(profileDir, { recursive: true });
