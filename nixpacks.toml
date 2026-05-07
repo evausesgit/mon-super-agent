@@ -1,5 +1,5 @@
 [phases.build]
-cmds = ["npm --workspace @mon-super-agent/api run build"]
+cmds = []
 
 [start]
 cmd = "npm --workspace @mon-super-agent/api run start"
