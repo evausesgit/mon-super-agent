@@ -40,7 +40,7 @@ export function AgentCreationForm() {
     startTransition(async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"}/agents`,
+          `${process.env.NEXT_PUBLIC_API_URL ?? "/api"}/agents`,
           {
             method: "POST",
             headers: {

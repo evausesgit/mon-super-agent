@@ -23,7 +23,7 @@ export function AgentDetail({ id }: { id: string }) {
       try {
         setError(null);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"}/agents/${id}`,
+          `${process.env.NEXT_PUBLIC_API_URL ?? "/api"}/agents/${id}`,
         );
 
         if (!response.ok) {
