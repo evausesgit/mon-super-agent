@@ -1,8 +1,5 @@
-[phases.setup]
-aptPkgs = ["openssh-client"]
-
 [phases.build]
 cmds = ["npm --workspace @mon-super-agent/web run build"]
 
 [start]
-cmd = "bash start.sh"
+cmd = "npm start"

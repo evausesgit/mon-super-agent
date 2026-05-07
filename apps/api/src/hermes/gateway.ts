@@ -1,7 +1,8 @@
-import { spawnHermes } from "./target.js";
+import { spawn } from "node:child_process";
 
 export function startGateway(profileId: string): { pid: number } {
-  const child = spawnHermes(
+  const child = spawn(
+    "hermes",
     ["--profile", profileId, "gateway", "run", "--replace"],
     {
       detached: true,
