@@ -1,3 +1,13 @@
+[phases.setup]
+aptPkgs = ["curl"]
+
+[phases.install]
+cmds = [
+  "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash",
+  "ln -sf /root/.local/bin/hermes /usr/local/bin/hermes",
+  "npm ci"
+]
+
 [phases.build]
 cmds = ["npm --workspace @mon-super-agent/web run build"]
 

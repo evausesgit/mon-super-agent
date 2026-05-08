@@ -5,10 +5,8 @@ import {
   type SpawnSyncOptions,
 } from "node:child_process";
 
-const DEFAULT_HERMES_BIN = "/home/geekette/.local/bin/hermes";
-
 function getHermesBin(): string {
-  return process.env.HERMES_BIN ?? DEFAULT_HERMES_BIN;
+  return process.env.HERMES_BIN ?? "hermes";
 }
 
 export function spawnHermesSync(args: string[], options: SpawnSyncOptions = {}) {
