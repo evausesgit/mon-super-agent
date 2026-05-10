@@ -11,6 +11,7 @@ import {
 } from "./db/agents.js";
 import { createOrResolveProfileByPhoneNumber } from "./db/profiles.js";
 import { isGatewayRunning, reconcileGateways, startGateway } from "./hermes/gateway.js";
+import { spawnHermesSync } from "./hermes/target.js";
 import { createAgent, type CreateAgentResult } from "./routes/agents.js";
 
 type AgentApiResponse = Omit<CreateAgentResult, "status"> & {
@@ -31,6 +32,18 @@ export function buildApp() {
     return {
       ok: true,
       service: "mon-super-agent-api",
+    };
+  });
+
+  app.get("/health/hermes", async () => {
+    const bin = process.env.HERMES_BIN ?? "/home/geekette/.local/bin/hermes";
+    const result = spawnHermesSync(["--version"], { stdio: "pipe" });
+    const ok = result.status === 0;
+    return {
+      ok,
+      bin,
+      version: ok ? result.stdout?.toString().trim() : null,
+      error: ok ? null : (result.stderr?.toString().trim() || (result as { error?: Error }).error?.message || "unknown error"),
     };
   });
 
@@ -129,7 +142,10 @@ export function buildApp() {
         };
       }
 
-      throw error;
+      reply.code(500);
+      return {
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
 
     insertAgent({
