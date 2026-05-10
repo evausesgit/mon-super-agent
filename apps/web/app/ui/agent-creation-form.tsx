@@ -23,8 +23,8 @@ const defaultValues = {
   userContact: "",
   channel: "telegram",
   telegramBotToken: "",
-  provider: "anthropic",
-  model: "anthropic/claude-sonnet-4-6",
+  provider: "codex",
+  model: "gpt-5.4",
 };
 
 export function AgentCreationForm() {
@@ -156,48 +156,22 @@ export function AgentCreationForm() {
             </div>
           </label>
 
-          <label className="choice-card">
+          <label className="choice-card choice-card--disabled">
             <input
-              checked={formValues.channel === "whatsapp"}
+              disabled
               name="channel"
               type="radio"
               value="whatsapp"
-              onChange={() =>
-                setFormValues((current) => ({
-                  ...current,
-                  channel: "whatsapp",
-                }))
-              }
             />
             <div>
               <strong>WhatsApp</strong>
-              <span>Higher value, more setup constraints</span>
+              <span className="coming-soon">Coming soon</span>
             </div>
           </label>
         </fieldset>
 
         <fieldset>
           <legend>Runtime provider</legend>
-
-          <label className="choice-card">
-            <input
-              checked={formValues.provider === "anthropic"}
-              name="provider"
-              type="radio"
-              value="anthropic"
-              onChange={() =>
-                setFormValues((current) => ({
-                  ...current,
-                  provider: "anthropic",
-                  model: "anthropic/claude-sonnet-4-6",
-                }))
-              }
-            />
-            <div>
-              <strong>Anthropic</strong>
-              <span>claude-sonnet-4-6</span>
-            </div>
-          </label>
 
           <label className="choice-card">
             <input
@@ -216,6 +190,19 @@ export function AgentCreationForm() {
             <div>
               <strong>Codex</strong>
               <span>gpt-5.4</span>
+            </div>
+          </label>
+
+          <label className="choice-card choice-card--disabled">
+            <input
+              disabled
+              name="provider"
+              type="radio"
+              value="anthropic"
+            />
+            <div>
+              <strong>Anthropic</strong>
+              <span className="coming-soon">Coming soon</span>
             </div>
           </label>
         </fieldset>

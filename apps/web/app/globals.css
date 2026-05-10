@@ -255,6 +255,20 @@ button {
   line-height: 1.6;
 }
 
+.choice-card--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.choice-card--disabled input {
+  cursor: not-allowed;
+}
+
+.coming-soon {
+  color: var(--muted);
+  font-style: italic;
+}
+
 .submit-action {
   width: 100%;
 }
