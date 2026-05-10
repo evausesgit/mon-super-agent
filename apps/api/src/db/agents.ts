@@ -99,6 +99,16 @@ export function listAgentsByOwnerId(
   return rows.map(mapAgentRow);
 }
 
+export function listAllAgents(
+  database: AgentDatabase = getAgentDatabase(),
+): AgentRecord[] {
+  const rows = database
+    .prepare("SELECT * FROM agents ORDER BY created_at DESC")
+    .all() as AgentRow[];
+
+  return rows.map(mapAgentRow);
+}
+
 export function listActiveAgents(
   database: AgentDatabase = getAgentDatabase(),
 ): AgentRecord[] {

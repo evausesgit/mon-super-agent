@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { OnboardingOutline } from "./ui/onboarding-outline";
 import { AgentCreationForm } from "./ui/agent-creation-form";
 
@@ -36,9 +37,9 @@ export default function HomePage() {
           <a className="primary-action" href="#create-agent">
             Create my super agent
           </a>
-          <p className="helper-copy">
-            First implementation target: Telegram-first onboarding.
-          </p>
+          <Link className="secondary-action" href="/souls">
+            View all souls
+          </Link>
         </div>
       </section>
 

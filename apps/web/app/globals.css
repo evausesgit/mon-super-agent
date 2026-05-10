@@ -117,6 +117,26 @@ button {
   color: var(--muted);
 }
 
+.secondary-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent-strong);
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.secondary-action:hover {
+  transform: translateY(-1px);
+  background: var(--surface-strong);
+}
+
 .panel-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -393,4 +413,145 @@ button {
 .outline-card small {
   color: var(--muted);
   line-height: 1.6;
+}
+
+/* Soul board */
+@keyframes soul-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 rgba(15, 122, 107, 0),
+      0 0 18px 4px rgba(15, 122, 107, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 0 0 10px rgba(15, 122, 107, 0.06),
+      0 0 44px 14px rgba(15, 122, 107, 0.38);
+  }
+}
+
+@keyframes soul-shimmer {
+  0%, 100% {
+    box-shadow: 0 0 16px 4px rgba(217, 119, 6, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 32px 10px rgba(217, 119, 6, 0.46);
+  }
+}
+
+.souls-board {
+  margin-top: 1.5rem;
+  min-height: 240px;
+}
+
+.souls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 2rem 1.5rem;
+  padding: 0.5rem 0 1.5rem;
+}
+
+.soul-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 220ms ease;
+}
+
+.soul-card:hover {
+  transform: translateY(-5px);
+}
+
+.soul-orb {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Georgia, serif;
+  font-size: 2.2rem;
+  border: 1px solid transparent;
+}
+
+.soul-orb--active {
+  background: radial-gradient(circle at 38% 34%, rgba(15, 122, 107, 0.32) 0%, rgba(15, 122, 107, 0.06) 68%);
+  color: var(--accent);
+  border-color: rgba(15, 122, 107, 0.22);
+  animation: soul-pulse 2.8s ease-in-out infinite;
+}
+
+.soul-orb--provisioning {
+  background: radial-gradient(circle at 38% 34%, rgba(217, 119, 6, 0.32) 0%, rgba(217, 119, 6, 0.06) 68%);
+  color: var(--warm);
+  border-color: rgba(217, 119, 6, 0.22);
+  animation: soul-shimmer 1.8s ease-in-out infinite;
+}
+
+.soul-orb--stopped {
+  background: radial-gradient(circle at 38% 34%, rgba(110, 88, 69, 0.13) 0%, transparent 68%);
+  color: var(--muted);
+  border-color: rgba(110, 88, 69, 0.1);
+}
+
+.soul-name {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 0.95rem;
+  text-align: center;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.soul-meta {
+  margin: 0;
+  color: var(--muted);
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.soul-status {
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.soul-status--active {
+  background: rgba(15, 122, 107, 0.1);
+  color: var(--accent-strong);
+}
+
+.soul-status--provisioning {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--warm);
+}
+
+.soul-status--stopped {
+  background: rgba(110, 88, 69, 0.07);
+  color: var(--muted);
+}
+
+.souls-empty {
+  padding: 4rem 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+.souls-updated {
+  margin: 0;
+  text-align: right;
+  color: var(--muted);
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 0.72rem;
+  opacity: 0.7;
 }

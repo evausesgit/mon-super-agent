@@ -6,6 +6,7 @@ import {
   getAgentById,
   insertAgent,
   listAgentsByPhoneNumber,
+  listAllAgents,
   updateGatewayStatus,
   type AgentRecord,
 } from "./db/agents.js";
@@ -200,6 +201,13 @@ export function buildApp() {
 
       throw error;
     }
+  });
+
+  app.get("/board", async () => {
+    const agents = listAllAgents().map((agent) =>
+      toAgentResponse(refreshGatewayStatus(agent)),
+    );
+    return { agents };
   });
 
   app.get("/agents/:id", async (request, reply) => {
