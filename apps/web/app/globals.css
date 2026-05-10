@@ -38,7 +38,27 @@ button {
 .page-shell {
   width: min(1120px, calc(100% - 3rem));
   margin: 0 auto;
-  padding: 4rem 0 5rem;
+  padding: 1.5rem 0 5rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.page-title {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  line-height: 1.1;
+}
+
+.fieldset-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
 .hero-card,
@@ -357,7 +377,12 @@ button {
 @media (max-width: 800px) {
   .page-shell {
     width: min(100% - 1.5rem, 1120px);
-    padding: 1.5rem 0 3rem;
+    padding: 1rem 0 3rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .hero-card,
@@ -370,7 +395,8 @@ button {
   }
 
   .form-panel,
-  .agent-form-card {
+  .agent-form-card,
+  .fieldset-row {
     grid-template-columns: 1fr;
   }
 

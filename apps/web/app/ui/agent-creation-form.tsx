@@ -134,78 +134,69 @@ export function AgentCreationForm() {
           </label>
         ) : null}
 
-        <fieldset>
-          <legend>Preferred channel</legend>
+        <div className="fieldset-row">
+          <fieldset>
+            <legend>Channel</legend>
 
-          <label className="choice-card">
-            <input
-              checked={formValues.channel === "telegram"}
-              name="channel"
-              type="radio"
-              value="telegram"
-              onChange={() =>
-                setFormValues((current) => ({
-                  ...current,
-                  channel: "telegram",
-                }))
-              }
-            />
-            <div>
-              <strong>Telegram</strong>
-              <span>Lowest-friction MVP path</span>
-            </div>
-          </label>
+            <label className="choice-card">
+              <input
+                checked={formValues.channel === "telegram"}
+                name="channel"
+                type="radio"
+                value="telegram"
+                onChange={() =>
+                  setFormValues((current) => ({
+                    ...current,
+                    channel: "telegram",
+                  }))
+                }
+              />
+              <div>
+                <strong>Telegram</strong>
+              </div>
+            </label>
 
-          <label className="choice-card choice-card--disabled">
-            <input
-              disabled
-              name="channel"
-              type="radio"
-              value="whatsapp"
-            />
-            <div>
-              <strong>WhatsApp</strong>
-              <span className="coming-soon">Coming soon</span>
-            </div>
-          </label>
-        </fieldset>
+            <label className="choice-card choice-card--disabled">
+              <input disabled name="channel" type="radio" value="whatsapp" />
+              <div>
+                <strong>WhatsApp</strong>
+                <span className="coming-soon">Coming soon</span>
+              </div>
+            </label>
+          </fieldset>
 
-        <fieldset>
-          <legend>Runtime provider</legend>
+          <fieldset>
+            <legend>Provider</legend>
 
-          <label className="choice-card">
-            <input
-              checked={formValues.provider === "codex"}
-              name="provider"
-              type="radio"
-              value="codex"
-              onChange={() =>
-                setFormValues((current) => ({
-                  ...current,
-                  provider: "codex",
-                  model: "gpt-5.4",
-                }))
-              }
-            />
-            <div>
-              <strong>Codex</strong>
-              <span>gpt-5.4</span>
-            </div>
-          </label>
+            <label className="choice-card">
+              <input
+                checked={formValues.provider === "codex"}
+                name="provider"
+                type="radio"
+                value="codex"
+                onChange={() =>
+                  setFormValues((current) => ({
+                    ...current,
+                    provider: "codex",
+                    model: "gpt-5.4",
+                  }))
+                }
+              />
+              <div>
+                <strong>Codex</strong>
+                <span>gpt-5.4</span>
+              </div>
+            </label>
 
-          <label className="choice-card choice-card--disabled">
-            <input
-              disabled
-              name="provider"
-              type="radio"
-              value="anthropic"
-            />
-            <div>
-              <strong>Anthropic</strong>
-              <span className="coming-soon">Coming soon</span>
-            </div>
-          </label>
-        </fieldset>
+            <label className="choice-card choice-card--disabled">
+              <input disabled name="provider" type="radio" value="anthropic" />
+              <div>
+                <strong>Anthropic</strong>
+                <span className="coming-soon">Coming soon</span>
+              </div>
+            </label>
+          </fieldset>
+        </div>
 
         <button className="primary-action submit-action" disabled={isPending} type="submit">
           {isPending ? "Creating..." : "Create my super agent"}

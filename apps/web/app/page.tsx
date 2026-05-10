@@ -25,17 +25,17 @@ const steps = [
 export default function HomePage() {
   return (
     <main className="page-shell">
-      <section className="hero-card">
-        <p className="eyebrow">Mon Super Agent</p>
-        <h1>Create your personal AI agent.</h1>
-        <div className="hero-actions">
-          <Link className="secondary-action" href="/souls">
-            View all souls
-          </Link>
+      <header className="page-header">
+        <div>
+          <p className="eyebrow" style={{ margin: 0 }}>Mon Super Agent</p>
+          <h1 className="page-title">Create your personal AI agent.</h1>
         </div>
-      </section>
+        <Link className="secondary-action" href="/souls">
+          View all souls
+        </Link>
+      </header>
 
-      <section className="form-panel" id="create-agent" style={{ marginTop: "1.5rem" }}>
+      <section id="create-agent">
         <AgentCreationForm />
       </section>
 
