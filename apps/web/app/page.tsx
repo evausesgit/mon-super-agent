@@ -27,23 +27,19 @@ export default function HomePage() {
     <main className="page-shell">
       <section className="hero-card">
         <p className="eyebrow">Mon Super Agent</p>
-        <h1>Create your personal AI agent in minutes.</h1>
-        <p className="hero-copy">
-          Start from the web, choose your messaging app, and begin talking to
-          your own super agent right away.
-        </p>
-
+        <h1>Create your personal AI agent.</h1>
         <div className="hero-actions">
-          <a className="primary-action" href="#create-agent">
-            Create my super agent
-          </a>
           <Link className="secondary-action" href="/souls">
             View all souls
           </Link>
         </div>
       </section>
 
-      <section className="panel-grid" aria-label="Product overview">
+      <section className="form-panel" id="create-agent" style={{ marginTop: "1.5rem" }}>
+        <AgentCreationForm />
+      </section>
+
+      <section className="panel-grid" aria-label="Product overview" style={{ marginTop: "3rem" }}>
         <article className="panel">
           <p className="section-label">How it works</p>
           <ol className="step-list">
@@ -69,21 +65,8 @@ export default function HomePage() {
         </article>
       </section>
 
-      <section className="form-panel" id="create-agent">
-        <div className="form-panel-copy">
-          <p className="section-label">First MVP flow</p>
-          <h2>Provision a first super agent</h2>
-          <p>
-            This form is the first vertical slice of the product. It collects
-            the minimum data we need, calls the provisioning API, and returns
-            the next step for channel activation.
-          </p>
-        </div>
-
-        <div className="form-stack">
-          <AgentCreationForm />
-          <OnboardingOutline />
-        </div>
+      <section className="panel" style={{ marginTop: "1.5rem" }}>
+        <OnboardingOutline />
       </section>
     </main>
   );
