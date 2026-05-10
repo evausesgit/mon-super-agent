@@ -1,3 +1,6 @@
+[phases.setup]
+aptPkgs = ["python3"]
+
 [phases.install]
 cmds = ["npm ci"]
 
