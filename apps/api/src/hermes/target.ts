@@ -6,7 +6,7 @@ import {
 } from "node:child_process";
 
 function getHermesBin(): string {
-  return process.env.HERMES_BIN ?? "/root/.local/bin/hermes";
+  return process.env.HERMES_BIN ?? "/home/geekette/.local/bin/hermes";
 }
 
 export function spawnHermesSync(args: string[], options: SpawnSyncOptions = {}) {

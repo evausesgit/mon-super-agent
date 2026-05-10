@@ -10,7 +10,7 @@ import {
   type AgentRecord,
 } from "./db/agents.js";
 import { createOrResolveProfileByPhoneNumber } from "./db/profiles.js";
-import { isGatewayRunning, startGateway } from "./hermes/gateway.js";
+import { isGatewayRunning, reconcileGateways, startGateway } from "./hermes/gateway.js";
 import { createAgent, type CreateAgentResult } from "./routes/agents.js";
 
 type AgentApiResponse = Omit<CreateAgentResult, "status"> & {
@@ -243,6 +243,8 @@ const port = Number(process.env.PORT ?? 4000);
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const app = buildApp();
+
+  reconcileGateways((msg) => app.log.info(msg));
 
   app.listen({
     port,

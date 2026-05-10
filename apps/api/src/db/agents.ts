@@ -99,6 +99,16 @@ export function listAgentsByOwnerId(
   return rows.map(mapAgentRow);
 }
 
+export function listActiveAgents(
+  database: AgentDatabase = getAgentDatabase(),
+): AgentRecord[] {
+  const rows = database
+    .prepare("SELECT * FROM agents WHERE gateway_status = 'active' ORDER BY created_at ASC")
+    .all() as AgentRow[];
+
+  return rows.map(mapAgentRow);
+}
+
 export function listAgentsByPhoneNumber(
   phoneNumber: string,
   database: AgentDatabase = getAgentDatabase(),
