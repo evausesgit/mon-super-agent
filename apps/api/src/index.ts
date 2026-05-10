@@ -96,20 +96,22 @@ export function buildApp() {
       };
     }
 
-    let ownerId: string;
+    let ownerId = body.userContact;
 
-    try {
-      const profile = createOrResolveProfileByPhoneNumber(body.userContact);
-      ownerId = profile.id;
-    } catch (error) {
-      if (error instanceof PhoneNumberValidationError) {
-        reply.code(400);
-        return {
-          error: error.message,
-        };
+    if (body.channel === "whatsapp" || !body.userContact.trim().startsWith("@")) {
+      try {
+        const profile = createOrResolveProfileByPhoneNumber(body.userContact);
+        ownerId = profile.id;
+      } catch (error) {
+        if (error instanceof PhoneNumberValidationError) {
+          reply.code(400);
+          return {
+            error: error.message,
+          };
+        }
+
+        throw error;
       }
-
-      throw error;
     }
 
     let agent: CreateAgentResult;
@@ -134,7 +136,8 @@ export function buildApp() {
       if (
         error instanceof Error &&
         (error.message.startsWith("Unsupported agent provider") ||
-          error.message.startsWith("Unsupported model"))
+          error.message.startsWith("Unsupported model") ||
+          error.message.startsWith("Telegram contact"))
       ) {
         reply.code(400);
         return {

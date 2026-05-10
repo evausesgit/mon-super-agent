@@ -99,6 +99,25 @@ describe("createAgent", () => {
     });
   });
 
+  it("accepts a Telegram handle as the owner contact", async () => {
+    const result = await createAgent({
+      agentName: "Nova",
+      channel: "telegram",
+      userContact: " @acid3croco ",
+      telegramBotToken: "1234567890:AAxxxxxx",
+    });
+
+    expect(result.ownerId).toBe("@acid3croco");
+    expect(createHermesProfileMock).toHaveBeenCalledWith({
+      agentId: result.id,
+      agentName: "Nova",
+      ownerId: "@acid3croco",
+      telegramBotToken: "1234567890:AAxxxxxx",
+      provider: "anthropic",
+      model: "anthropic/claude-sonnet-4-6",
+    });
+  });
+
   it("creates a Codex profile with GPT-5.4", async () => {
     const result = await createAgent({
       agentName: "Nova",
@@ -317,6 +336,46 @@ describe("POST /agents", () => {
     });
     expect(startGatewayMock).toHaveBeenCalledWith(body.id);
     expect(updateGatewayStatusMock).toHaveBeenCalledWith(body.id, 1234, "active");
+
+    await app.close();
+  });
+
+  it("creates a Telegram agent for a Telegram handle without requiring a phone number profile", async () => {
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/agents",
+      payload: {
+        agentName: "Nova",
+        channel: "telegram",
+        userContact: "@acid3croco",
+        telegramBotToken: "1234567890:AAxxxxxx",
+      },
+    });
+
+    const body = response.json();
+
+    expect(response.statusCode).toBe(201);
+    expect(body.ownerId).toBe("@acid3croco");
+    expect(createOrResolveProfileByPhoneNumberMock).not.toHaveBeenCalled();
+    expect(createHermesProfileMock).toHaveBeenCalledWith({
+      agentId: body.id,
+      agentName: "Nova",
+      ownerId: "@acid3croco",
+      telegramBotToken: "1234567890:AAxxxxxx",
+      provider: "anthropic",
+      model: "anthropic/claude-sonnet-4-6",
+    });
+    expect(insertAgentMock).toHaveBeenCalledWith({
+      id: body.id,
+      name: "Nova",
+      ownerId: "@acid3croco",
+      channel: "telegram",
+      provider: "anthropic",
+      model: "anthropic/claude-sonnet-4-6",
+      gatewayStatus: "provisioning",
+    });
 
     await app.close();
   });

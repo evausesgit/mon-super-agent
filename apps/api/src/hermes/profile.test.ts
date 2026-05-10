@@ -3,11 +3,12 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { execSync } from "node:child_process";
+import { execSync, spawnSync } from "node:child_process";
 import { createHermesProfile, getBotUsername } from "./profile.js";
 
 vi.mock("node:child_process", () => ({
   execSync: vi.fn(),
+  spawnSync: vi.fn(() => ({ status: 0, stderr: Buffer.from("") })),
 }));
 
 afterEach(() => {

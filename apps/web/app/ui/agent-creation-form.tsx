@@ -95,7 +95,9 @@ export function AgentCreationForm() {
           Your contact
           <input
             name="userContact"
-            placeholder="@telegram_handle or phone number"
+            placeholder={
+              formValues.channel === "telegram" ? "@telegram_handle" : "+33612345678"
+            }
             required
             value={formValues.userContact}
             onChange={(event) =>

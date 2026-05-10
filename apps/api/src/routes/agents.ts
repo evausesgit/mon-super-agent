@@ -20,7 +20,7 @@ export type CreateAgentResult = AgentProfile & {
 
 export async function createAgent(input: CreateAgentInput): Promise<CreateAgentResult> {
   const id = createHermesAgentId(input.agentName);
-  const ownerId = normalizePhoneNumber(input.userContact);
+  const ownerId = normalizeOwnerContact(input.channel, input.userContact);
   let botUsername: string;
 
   try {
@@ -52,6 +52,29 @@ export async function createAgent(input: CreateAgentInput): Promise<CreateAgentR
     ...profile,
     recommendedChannel: input.channel,
   };
+}
+
+function normalizeOwnerContact(
+  channel: CreateAgentInput["channel"],
+  userContact: string,
+) {
+  if (channel === "whatsapp") {
+    return normalizePhoneNumber(userContact);
+  }
+
+  const telegramHandle = userContact.trim();
+
+  if (telegramHandle.startsWith("@")) {
+    if (!/^@[a-zA-Z0-9_]{5,32}$/.test(telegramHandle)) {
+      throw new Error(
+        "Telegram contact must be a valid handle starting with @, for example @BotFather",
+      );
+    }
+
+    return telegramHandle;
+  }
+
+  return normalizePhoneNumber(userContact);
 }
 
 function createHermesAgentId(agentName: string) {
