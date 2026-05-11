@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SoulBoard } from "../ui/soul-board";
 
 export default function SoulsPage() {
@@ -9,6 +10,11 @@ export default function SoulsPage() {
         <p className="hero-copy">
           Every agent you have created, live. Watch them breathe.
         </p>
+        <div className="hero-actions">
+          <Link className="secondary-action" href="/consumption">
+            Agent consumption
+          </Link>
+        </div>
       </section>
       <SoulBoard />
     </main>

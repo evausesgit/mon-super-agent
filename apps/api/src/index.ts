@@ -14,6 +14,7 @@ import { createOrResolveProfileByPhoneNumber } from "./db/profiles.js";
 import { isGatewayRunning, reconcileGateways, startGateway } from "./hermes/gateway.js";
 import { spawnHermesSync } from "./hermes/target.js";
 import { createAgent, type CreateAgentResult } from "./routes/agents.js";
+import { estimateAgentsConsumption } from "./services/usage.js";
 
 type AgentApiResponse = Omit<CreateAgentResult, "status"> & {
   status: string;
@@ -208,6 +209,11 @@ export function buildApp() {
       toAgentResponse(refreshGatewayStatus(agent)),
     );
     return { agents };
+  });
+
+  app.get("/consumption", async () => {
+    const agents = listAllAgents().map(refreshGatewayStatus);
+    return estimateAgentsConsumption(agents);
   });
 
   app.get("/agents/:id", async (request, reply) => {

@@ -5,6 +5,7 @@ import {
   getAgentById,
   insertAgent,
   listAgentsByPhoneNumber,
+  listAllAgents,
   updateGatewayStatus,
 } from "../db/agents.js";
 import { createOrResolveProfileByPhoneNumber } from "../db/profiles.js";
@@ -17,6 +18,7 @@ vi.mock("../db/agents.js", () => ({
   getAgentById: vi.fn(),
   insertAgent: vi.fn(),
   listAgentsByPhoneNumber: vi.fn(),
+  listAllAgents: vi.fn(),
   updateGatewayStatus: vi.fn(),
 }));
 
@@ -51,6 +53,7 @@ const getBotUsernameMock = vi.mocked(getBotUsername);
 const getAgentByIdMock = vi.mocked(getAgentById);
 const insertAgentMock = vi.mocked(insertAgent);
 const listAgentsByPhoneNumberMock = vi.mocked(listAgentsByPhoneNumber);
+const listAllAgentsMock = vi.mocked(listAllAgents);
 const createOrResolveProfileByPhoneNumberMock = vi.mocked(
   createOrResolveProfileByPhoneNumber,
 );
@@ -68,6 +71,8 @@ beforeEach(() => {
     normalizePhoneNumber(phoneNumber);
     return [];
   });
+  listAllAgentsMock.mockReset();
+  listAllAgentsMock.mockReturnValue([]);
   createOrResolveProfileByPhoneNumberMock.mockClear();
   insertAgentMock.mockClear();
   isGatewayRunningMock.mockReset();
@@ -195,6 +200,49 @@ describe("GET /agents/:id", () => {
       id: "agent-legacy",
       ownerId: "@eva",
       status: "active",
+    });
+
+    await app.close();
+  });
+});
+
+describe("GET /consumption", () => {
+  it("returns estimated consumption for every persisted agent", async () => {
+    listAllAgentsMock.mockReturnValue([
+      {
+        id: "agent-nova",
+        name: "Nova",
+        ownerId: "@eva",
+        channel: "telegram",
+        provider: "anthropic",
+        model: "anthropic/claude-sonnet-4-6",
+        gatewayPid: 1234,
+        gatewayStatus: "active",
+        createdAt: 1_714_000_000_000,
+      },
+    ]);
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/consumption",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      agents: [
+        {
+          agentId: "agent-nova",
+          agentName: "Nova",
+          monthlyTotalTokens: 4_500_000,
+          estimatedMonthlyCostUsd: 24.3,
+        },
+      ],
+      totals: {
+        totalAgents: 1,
+        totalMonthlyTokens: 4_500_000,
+        totalEstimatedMonthlyCostUsd: 24.3,
+      },
     });
 
     await app.close();

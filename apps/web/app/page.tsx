@@ -30,9 +30,14 @@ export default function HomePage() {
           <p className="eyebrow" style={{ margin: 0 }}>Mon Super Agent</p>
           <h1 className="page-title">Create your personal AI agent.</h1>
         </div>
-        <Link className="secondary-action" href="/souls">
-          View all souls
-        </Link>
+        <div className="hero-actions">
+          <Link className="secondary-action" href="/souls">
+            View all souls
+          </Link>
+          <Link className="secondary-action" href="/consumption">
+            Agent consumption
+          </Link>
+        </div>
       </header>
 
       <section id="create-agent">

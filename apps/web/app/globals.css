@@ -621,3 +621,129 @@ button {
   font-size: 0.72rem;
   opacity: 0.7;
 }
+
+/* Consumption dashboard */
+.consumption-shell {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.consumption-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.consumption-summary-card {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.consumption-summary-card strong {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
+}
+
+.consumption-summary-card span,
+.consumption-highlight p,
+.consumption-table-header span,
+.consumption-row p,
+.consumption-row dt,
+.consumption-note {
+  color: var(--muted);
+}
+
+.consumption-highlight h2 {
+  margin: 0 0 0.6rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.consumption-highlight p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.consumption-table-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.consumption-table-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.consumption-table-header h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+}
+
+.consumption-table-header span {
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 0.78rem;
+}
+
+.consumption-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.consumption-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.6fr);
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 22px;
+  background: var(--surface-strong);
+  border: 1px solid rgba(78, 53, 32, 0.08);
+}
+
+.consumption-row h3,
+.consumption-row p,
+.consumption-row dl {
+  margin: 0;
+}
+
+.consumption-row p {
+  margin-top: 0.35rem;
+  line-height: 1.5;
+}
+
+.consumption-row dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.consumption-row dt {
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.consumption-row dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.consumption-note {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 800px) {
+  .consumption-summary-grid,
+  .consumption-row,
+  .consumption-row dl {
+    grid-template-columns: 1fr;
+  }
+
+  .consumption-table-header {
+    flex-direction: column;
+  }
+}
