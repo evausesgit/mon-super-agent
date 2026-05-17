@@ -714,7 +714,7 @@ button {
 
 .consumption-row dl {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.85rem;
 }
 
@@ -734,6 +734,36 @@ button {
 
 .consumption-note {
   margin-top: 0.5rem;
+}
+
+.consumption-period-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.period-btn {
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(78, 53, 32, 0.18);
+  background: transparent;
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.period-btn.active {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+.consumption-no-data {
+  align-self: center;
+  font-style: italic;
 }
 
 @media (max-width: 800px) {

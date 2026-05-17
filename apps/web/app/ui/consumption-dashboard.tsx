@@ -2,36 +2,47 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+type PeriodConsumption = {
+  sessions: number;
+  messages: number;
+  inputTokens: number;
+  outputTokens: number;
+  estimatedCostUsd: number;
+};
+
 type AgentConsumption = {
   agentId: string;
   agentName: string;
   provider: string;
   model: string;
   status: string;
-  dailyMessages: number;
-  monthlyInputTokens: number;
-  monthlyOutputTokens: number;
-  monthlyTotalTokens: number;
-  estimatedMonthlyCostUsd: number;
-  pricingNote: string;
+  dataSource: "real" | "none";
+  lastActivity: string | null;
+  last30Days: PeriodConsumption;
+  allTime: PeriodConsumption;
+};
+
+type PeriodTotals = {
+  inputTokens: number;
+  outputTokens: number;
+  estimatedCostUsd: number;
 };
 
 type ConsumptionPayload = {
   agents: AgentConsumption[];
   totals: {
     totalAgents: number;
-    totalMonthlyTokens: number;
-    totalEstimatedMonthlyCostUsd: number;
+    last30Days: PeriodTotals;
+    allTime: PeriodTotals;
   };
 };
 
+type Period = "last30Days" | "allTime";
+
+const emptyPeriodTotals: PeriodTotals = { inputTokens: 0, outputTokens: 0, estimatedCostUsd: 0 };
 const emptyPayload: ConsumptionPayload = {
   agents: [],
-  totals: {
-    totalAgents: 0,
-    totalMonthlyTokens: 0,
-    totalEstimatedMonthlyCostUsd: 0,
-  },
+  totals: { totalAgents: 0, last30Days: emptyPeriodTotals, allTime: emptyPeriodTotals },
 };
 
 const tokenFormatter = new Intl.NumberFormat("en-US");
@@ -44,6 +55,7 @@ export function ConsumptionDashboard() {
   const [payload, setPayload] = useState<ConsumptionPayload>(emptyPayload);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [period, setPeriod] = useState<Period>("last30Days");
 
   async function fetchConsumption() {
     try {
@@ -61,7 +73,7 @@ export function ConsumptionDashboard() {
       setLastUpdated(new Date());
     } catch {
       setPayload(emptyPayload);
-      setError("Impossible de charger l’estimation de consommation pour le moment.");
+      setError("Impossible de charger la consommation pour le moment.");
     }
   }
 
@@ -71,14 +83,32 @@ export function ConsumptionDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  const periodTotals = payload.totals[period];
+
   const mostExpensiveAgent = useMemo(() => {
-    return [...payload.agents].sort(
-      (a, b) => b.estimatedMonthlyCostUsd - a.estimatedMonthlyCostUsd,
+    const withData = payload.agents.filter((a) => a.dataSource === "real");
+    return [...withData].sort(
+      (a, b) => b[period].estimatedCostUsd - a[period].estimatedCostUsd,
     )[0];
-  }, [payload.agents]);
+  }, [payload.agents, period]);
 
   return (
-    <section className="consumption-shell" aria-label="Agent consumption estimates">
+    <section className="consumption-shell" aria-label="Agent consumption">
+      <div className="consumption-period-toggle">
+        <button
+          className={period === "last30Days" ? "period-btn active" : "period-btn"}
+          onClick={() => setPeriod("last30Days")}
+        >
+          30 derniers jours
+        </button>
+        <button
+          className={period === "allTime" ? "period-btn active" : "period-btn"}
+          onClick={() => setPeriod("allTime")}
+        >
+          Tout l&apos;historique
+        </button>
+      </div>
+
       <div className="consumption-summary-grid">
         <article className="panel consumption-summary-card">
           <p className="section-label">Agents</p>
@@ -86,14 +116,14 @@ export function ConsumptionDashboard() {
           <span>agents suivis</span>
         </article>
         <article className="panel consumption-summary-card">
-          <p className="section-label">Tokens / mois</p>
-          <strong>{tokenFormatter.format(payload.totals.totalMonthlyTokens)}</strong>
-          <span>entrée + sortie estimées</span>
+          <p className="section-label">Tokens</p>
+          <strong>{tokenFormatter.format(periodTotals.inputTokens + periodTotals.outputTokens)}</strong>
+          <span>entrée + sortie</span>
         </article>
         <article className="panel consumption-summary-card">
-          <p className="section-label">Coût / mois</p>
-          <strong>{currencyFormatter.format(payload.totals.totalEstimatedMonthlyCostUsd)}</strong>
-          <span>budget prévisionnel</span>
+          <p className="section-label">Coût estimé</p>
+          <strong>{currencyFormatter.format(periodTotals.estimatedCostUsd)}</strong>
+          <span>basé sur les tokens réels</span>
         </article>
       </div>
 
@@ -102,7 +132,11 @@ export function ConsumptionDashboard() {
           <p className="section-label">Agent le plus consommateur</p>
           <h2>{mostExpensiveAgent.agentName}</h2>
           <p>
-            {currencyFormatter.format(mostExpensiveAgent.estimatedMonthlyCostUsd)} / mois · {tokenFormatter.format(mostExpensiveAgent.monthlyTotalTokens)} tokens
+            {currencyFormatter.format(mostExpensiveAgent[period].estimatedCostUsd)} ·{" "}
+            {tokenFormatter.format(
+              mostExpensiveAgent[period].inputTokens + mostExpensiveAgent[period].outputTokens,
+            )}{" "}
+            tokens · {mostExpensiveAgent[period].sessions} sessions
           </p>
         </article>
       )}
@@ -111,7 +145,7 @@ export function ConsumptionDashboard() {
         <div className="consumption-table-header">
           <div>
             <p className="section-label">Détail par agent</p>
-            <h2>Consommation estimée</h2>
+            <h2>Consommation réelle</h2>
           </div>
           {lastUpdated && <span>Mis à jour à {lastUpdated.toLocaleTimeString()}</span>}
         </div>
@@ -122,38 +156,57 @@ export function ConsumptionDashboard() {
           <p className="souls-empty">Aucun agent pour le moment.</p>
         ) : (
           <div className="consumption-list">
-            {payload.agents.map((agent) => (
-              <div className="consumption-row" key={agent.agentId}>
-                <div>
-                  <h3>{agent.agentName}</h3>
-                  <p>{agent.provider} · {agent.model} · {agent.status}</p>
+            {payload.agents.map((agent) => {
+              const data = agent[period];
+              return (
+                <div className="consumption-row" key={agent.agentId}>
+                  <div>
+                    <h3>{agent.agentName}</h3>
+                    <p>
+                      {agent.provider} · {agent.model} · {agent.status}
+                    </p>
+                    {agent.lastActivity && (
+                      <p className="helper-copy">
+                        Dernière activité :{" "}
+                        {new Date(agent.lastActivity).toLocaleDateString("fr-FR")}
+                      </p>
+                    )}
+                  </div>
+                  {agent.dataSource === "none" ? (
+                    <p className="helper-copy consumption-no-data">Pas encore de données</p>
+                  ) : (
+                    <dl>
+                      <div>
+                        <dt>Sessions</dt>
+                        <dd>{data.sessions}</dd>
+                      </div>
+                      <div>
+                        <dt>Messages</dt>
+                        <dd>{data.messages}</dd>
+                      </div>
+                      <div>
+                        <dt>Input tokens</dt>
+                        <dd>{tokenFormatter.format(data.inputTokens)}</dd>
+                      </div>
+                      <div>
+                        <dt>Output tokens</dt>
+                        <dd>{tokenFormatter.format(data.outputTokens)}</dd>
+                      </div>
+                      <div>
+                        <dt>Coût estimé</dt>
+                        <dd>{currencyFormatter.format(data.estimatedCostUsd)}</dd>
+                      </div>
+                    </dl>
+                  )}
                 </div>
-                <dl>
-                  <div>
-                    <dt>Messages / jour</dt>
-                    <dd>{agent.dailyMessages}</dd>
-                  </div>
-                  <div>
-                    <dt>Input tokens / mois</dt>
-                    <dd>{tokenFormatter.format(agent.monthlyInputTokens)}</dd>
-                  </div>
-                  <div>
-                    <dt>Output tokens / mois</dt>
-                    <dd>{tokenFormatter.format(agent.monthlyOutputTokens)}</dd>
-                  </div>
-                  <div>
-                    <dt>Coût estimé / mois</dt>
-                    <dd>{currencyFormatter.format(agent.estimatedMonthlyCostUsd)}</dd>
-                  </div>
-                </dl>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         <p className="helper-copy consumption-note">
-          Estimation basée sur le statut actuel de l’agent, un mois de 30 jours,
-          une moyenne de tokens par message et les prix configurés par modèle.
+          Données lues depuis les logs Hermes par profil. Le coût est estimé à partir des tokens
+          réels et des tarifs configurés par modèle.
         </p>
       </article>
     </section>
