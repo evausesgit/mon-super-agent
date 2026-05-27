@@ -10,6 +10,8 @@ type AgentRecord = {
   recommendedChannel: "telegram" | "whatsapp";
   provider: "anthropic" | "codex";
   model: "anthropic/claude-sonnet-4-6" | "gpt-5.4";
+  language?: string;
+  voice?: string;
   nextStep: string;
   activationTarget: string;
 };
@@ -76,6 +78,9 @@ export function AgentDetail({ id }: { id: string }) {
               </p>
               <p>
                 Runtime: <strong>{agent.provider}/{agent.model}</strong>
+              </p>
+              <p>
+                Voice: <strong>{agent.language ?? "fr-FR"} / {agent.voice ?? "fr-FR-VivienneMultilingualNeural"}</strong>
               </p>
               <p>{agent.nextStep}</p>
               {agent.recommendedChannel === "telegram" ? (

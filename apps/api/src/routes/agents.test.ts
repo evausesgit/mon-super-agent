@@ -101,6 +101,8 @@ describe("createAgent", () => {
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
     });
   });
 
@@ -120,6 +122,8 @@ describe("createAgent", () => {
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
     });
   });
 
@@ -142,7 +146,29 @@ describe("createAgent", () => {
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "codex",
       model: "gpt-5.4",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
     });
+  });
+
+  it("passes selected language and voice to Hermes profile and returns them in result", async () => {
+    const result = await createAgent({
+      agentName: "Ryan",
+      channel: "telegram",
+      userContact: "+1 (415) 555-2671",
+      telegramBotToken: "1234567890:AAxxxxxx",
+      language: "en-GB",
+      voice: "en-GB-RyanNeural",
+    });
+
+    expect(result.language).toBe("en-GB");
+    expect(result.voice).toBe("en-GB-RyanNeural");
+    expect(createHermesProfileMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: "en-GB",
+        voice: "en-GB-RyanNeural",
+      }),
+    );
   });
 });
 
@@ -155,6 +181,8 @@ describe("GET /agents/:id", () => {
       channel: "telegram",
       provider: "codex",
       model: "gpt-5.4",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
       gatewayPid: 1234,
       gatewayStatus: "active",
       createdAt: 1_714_000_000_000,
@@ -184,6 +212,8 @@ describe("GET /agents/:id", () => {
       channel: "telegram",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
       gatewayPid: null,
       gatewayStatus: "active",
       createdAt: 1_714_000_000_000,
@@ -216,6 +246,8 @@ describe("GET /consumption", () => {
         channel: "telegram",
         provider: "anthropic",
         model: "anthropic/claude-sonnet-4-6",
+        language: "fr-FR",
+        voice: "fr-FR-VivienneMultilingualNeural",
         gatewayPid: 1234,
         gatewayStatus: "active",
         createdAt: 1_714_000_000_000,
@@ -372,6 +404,8 @@ describe("POST /agents", () => {
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
     });
     expect(insertAgentMock).toHaveBeenCalledWith({
       id: body.id,
@@ -380,6 +414,8 @@ describe("POST /agents", () => {
       channel: "telegram",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
       gatewayStatus: "provisioning",
     });
     expect(startGatewayMock).toHaveBeenCalledWith(body.id);
@@ -414,6 +450,8 @@ describe("POST /agents", () => {
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
     });
     expect(insertAgentMock).toHaveBeenCalledWith({
       id: body.id,
@@ -422,6 +460,8 @@ describe("POST /agents", () => {
       channel: "telegram",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
       gatewayStatus: "provisioning",
     });
 
@@ -509,6 +549,8 @@ describe("POST /agents", () => {
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "codex",
       model: "gpt-5.4",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
     });
     expect(insertAgentMock).toHaveBeenCalledWith({
       id: body.id,
@@ -517,6 +559,8 @@ describe("POST /agents", () => {
       channel: "telegram",
       provider: "codex",
       model: "gpt-5.4",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
       gatewayStatus: "provisioning",
     });
     expect(startGatewayMock).toHaveBeenCalledWith(body.id);
@@ -548,6 +592,86 @@ describe("POST /agents", () => {
     expect(createHermesProfileMock).not.toHaveBeenCalled();
     expect(insertAgentMock).not.toHaveBeenCalled();
     expect(startGatewayMock).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it("passes language and voice through to Hermes profile and DB insert", async () => {
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/agents",
+      payload: {
+        agentName: "Ryan",
+        channel: "telegram",
+        userContact: "+14155552671",
+        telegramBotToken: "1234567890:AAxxxxxx",
+        language: "en-GB",
+        voice: "en-GB-RyanNeural",
+      },
+    });
+
+    const body = response.json();
+
+    expect(response.statusCode).toBe(201);
+    expect(body.language).toBe("en-GB");
+    expect(body.voice).toBe("en-GB-RyanNeural");
+    expect(createHermesProfileMock).toHaveBeenCalledWith(
+      expect.objectContaining({ language: "en-GB", voice: "en-GB-RyanNeural" }),
+    );
+    expect(insertAgentMock).toHaveBeenCalledWith(
+      expect.objectContaining({ language: "en-GB", voice: "en-GB-RyanNeural" }),
+    );
+
+    await app.close();
+  });
+
+  it("returns 400 with an unsupported language", async () => {
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/agents",
+      payload: {
+        agentName: "Nova",
+        channel: "telegram",
+        userContact: "+14155552671",
+        telegramBotToken: "1234567890:AAxxxxxx",
+        language: "de-DE",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: 'Unsupported agent language "de-DE". Supported languages: fr-FR, en-GB, en-US',
+    });
+    expect(createHermesProfileMock).not.toHaveBeenCalled();
+    expect(insertAgentMock).not.toHaveBeenCalled();
+
+    await app.close();
+  });
+
+  it("returns 400 with an unsupported voice/language combination", async () => {
+    const app = buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/agents",
+      payload: {
+        agentName: "Nova",
+        channel: "telegram",
+        userContact: "+14155552671",
+        telegramBotToken: "1234567890:AAxxxxxx",
+        language: "en-GB",
+        voice: "fr-FR-VivienneMultilingualNeural",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error).toContain("Unsupported voice");
+    expect(createHermesProfileMock).not.toHaveBeenCalled();
+    expect(insertAgentMock).not.toHaveBeenCalled();
 
     await app.close();
   });
@@ -591,6 +715,8 @@ describe("GET /agents", () => {
         channel: "telegram",
         provider: "anthropic",
         model: "anthropic/claude-sonnet-4-6",
+        language: "fr-FR",
+        voice: "fr-FR-VivienneMultilingualNeural",
         gatewayPid: 1234,
         gatewayStatus: "active",
         createdAt: 1,
@@ -602,6 +728,8 @@ describe("GET /agents", () => {
         channel: "telegram",
         provider: "codex",
         model: "gpt-5.4",
+        language: "en-GB",
+        voice: "en-GB-RyanNeural",
         gatewayPid: 5678,
         gatewayStatus: "active",
         createdAt: 2,

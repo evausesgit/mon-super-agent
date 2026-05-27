@@ -5,6 +5,19 @@ import { spawnHermesSync } from "./target.js";
 
 const HERMES_AGENT_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 
+function languageInstruction(language: string): string {
+  switch (language) {
+    case "fr-FR":
+      return "Respond in French by default, unless the user explicitly asks for another language.";
+    case "en-GB":
+      return "Respond in British English by default, unless the user explicitly asks for another language.";
+    case "en-US":
+      return "Respond in American English by default, unless the user explicitly asks for another language.";
+    default:
+      return "Respond in the user's preferred language by default.";
+  }
+}
+
 export type CreateHermesProfileInput = {
   agentId: string;
   agentName: string;
@@ -12,6 +25,8 @@ export type CreateHermesProfileInput = {
   telegramBotToken: string;
   provider: string;
   model: string;
+  language: string;
+  voice: string;
 };
 
 export async function getBotUsername(botToken: string): Promise<string> {
@@ -62,12 +77,20 @@ toolsets:
 - hermes-cli
 agent:
   max_turns: 90
+tts:
+  provider: edge
+  edge:
+    voice: ${input.voice}
 `,
   );
 
   fs.writeFileSync(
     path.join(profileDir, "SOUL.md"),
     `You are ${input.agentName}, a personal AI super agent. Be warm, concise, and genuinely helpful. You belong to ${input.ownerId} and exist to make their life easier.
+
+${languageInstruction(input.language)}
+
+When sending voice messages, use the configured TTS voice for spoken replies.
 `,
   );
 

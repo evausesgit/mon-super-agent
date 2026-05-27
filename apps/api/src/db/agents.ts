@@ -1,9 +1,13 @@
 import {
+  DEFAULT_AGENT_LANGUAGE,
   DEFAULT_AGENT_MODEL,
   DEFAULT_AGENT_PROVIDER,
+  DEFAULT_AGENT_VOICE,
   normalizePhoneNumber,
+  type AgentLanguage,
   type AgentModel,
   type AgentProvider,
+  type AgentVoice,
 } from "@mon-super-agent/agent-runtime";
 import type { AgentDatabase } from "./schema.js";
 import { getAgentDatabase } from "./schema.js";
@@ -15,6 +19,8 @@ export type AgentRecord = {
   channel: "telegram" | "whatsapp";
   provider: AgentProvider;
   model: AgentModel;
+  language: AgentLanguage;
+  voice: AgentVoice;
   gatewayPid: number | null;
   gatewayStatus: string;
   createdAt: number;
@@ -27,6 +33,8 @@ export type InsertAgentInput = {
   channel: "telegram" | "whatsapp";
   provider?: AgentProvider;
   model?: AgentModel;
+  language?: AgentLanguage;
+  voice?: AgentVoice;
   gatewayPid?: number | null;
   gatewayStatus?: string;
   createdAt?: number;
@@ -39,6 +47,8 @@ type AgentRow = {
   channel: "telegram" | "whatsapp";
   provider: AgentProvider;
   model: AgentModel;
+  language: AgentLanguage;
+  voice: AgentVoice;
   gateway_pid: number | null;
   gateway_status: string;
   created_at: number;
@@ -58,10 +68,12 @@ export function insertAgent(
           channel,
           provider,
           model,
+          language,
+          voice,
           gateway_pid,
           gateway_status,
           created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
     )
     .run(
@@ -71,6 +83,8 @@ export function insertAgent(
       agent.channel,
       agent.provider ?? DEFAULT_AGENT_PROVIDER,
       agent.model ?? DEFAULT_AGENT_MODEL,
+      agent.language ?? DEFAULT_AGENT_LANGUAGE,
+      agent.voice ?? DEFAULT_AGENT_VOICE,
       agent.gatewayPid ?? null,
       agent.gatewayStatus ?? "provisioning",
       agent.createdAt ?? Date.now(),
@@ -151,6 +165,8 @@ function mapAgentRow(row: AgentRow): AgentRecord {
     channel: row.channel,
     provider: row.provider,
     model: row.model,
+    language: row.language ?? DEFAULT_AGENT_LANGUAGE,
+    voice: row.voice ?? DEFAULT_AGENT_VOICE,
     gatewayPid: row.gateway_pid,
     gatewayStatus: row.gateway_status,
     createdAt: row.created_at,

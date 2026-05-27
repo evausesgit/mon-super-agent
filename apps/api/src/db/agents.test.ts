@@ -32,6 +32,8 @@ describe("agent persistence", () => {
       channel: "telegram",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
       gatewayPid: null,
       gatewayStatus: "provisioning",
       createdAt: 1_714_000_000_000,
@@ -58,6 +60,50 @@ describe("agent persistence", () => {
     expect(getAgentById("agent-codex", database)).toMatchObject({
       provider: "codex",
       model: "gpt-5.4",
+    });
+
+    database.close();
+  });
+
+  it("persists agent language and voice", () => {
+    const database = openAgentDatabase(":memory:");
+
+    insertAgent(
+      {
+        id: "agent-ryan",
+        name: "Ryan",
+        ownerId: "@eva",
+        channel: "telegram",
+        language: "en-GB",
+        voice: "en-GB-RyanNeural",
+      },
+      database,
+    );
+
+    expect(getAgentById("agent-ryan", database)).toMatchObject({
+      language: "en-GB",
+      voice: "en-GB-RyanNeural",
+    });
+
+    database.close();
+  });
+
+  it("defaults language and voice to French/Vivienne when not specified", () => {
+    const database = openAgentDatabase(":memory:");
+
+    insertAgent(
+      {
+        id: "agent-default",
+        name: "Default",
+        ownerId: "@eva",
+        channel: "telegram",
+      },
+      database,
+    );
+
+    expect(getAgentById("agent-default", database)).toMatchObject({
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
     });
 
     database.close();

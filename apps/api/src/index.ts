@@ -84,6 +84,8 @@ export function buildApp() {
       telegramBotToken?: string;
       provider?: string;
       model?: string;
+      language?: string;
+      voice?: string;
     };
 
     if (
@@ -127,6 +129,8 @@ export function buildApp() {
         telegramBotToken: body.telegramBotToken,
         provider: body.provider,
         model: body.model,
+        language: body.language,
+        voice: body.voice,
       });
     } catch (error) {
       if (error instanceof Error && error.message === "Invalid Telegram bot token") {
@@ -140,6 +144,8 @@ export function buildApp() {
         error instanceof Error &&
         (error.message.startsWith("Unsupported agent provider") ||
           error.message.startsWith("Unsupported model") ||
+          error.message.startsWith("Unsupported agent language") ||
+          error.message.startsWith("Unsupported voice") ||
           error.message.startsWith("Telegram contact"))
       ) {
         reply.code(400);
@@ -161,6 +167,8 @@ export function buildApp() {
       channel: agent.channel,
       provider: agent.provider,
       model: agent.model,
+      language: agent.language,
+      voice: agent.voice,
       gatewayStatus: "provisioning",
     });
 
@@ -260,6 +268,8 @@ function toAgentResponse(agent: AgentRecord): AgentApiResponse {
     channel: agent.channel,
     provider: agent.provider,
     model: agent.model,
+    language: agent.language,
+    voice: agent.voice,
     status: agent.gatewayStatus,
     gatewayPid: agent.gatewayPid,
     recommendedChannel: agent.channel,

@@ -3,6 +3,50 @@
 import Link from "next/link";
 import { FormEvent, useState, useTransition } from "react";
 
+type AgentLanguage = "fr-FR" | "en-GB" | "en-US";
+
+type VoiceOption = {
+  value: string;
+  label: string;
+};
+
+type LanguageOption = {
+  value: AgentLanguage;
+  label: string;
+  defaultVoice: string;
+  voices: VoiceOption[];
+};
+
+const LANGUAGE_OPTIONS: LanguageOption[] = [
+  {
+    value: "fr-FR",
+    label: "Français",
+    defaultVoice: "fr-FR-VivienneMultilingualNeural",
+    voices: [
+      { value: "fr-FR-VivienneMultilingualNeural", label: "Vivienne — voix féminine naturelle" },
+      { value: "fr-FR-RemyMultilingualNeural", label: "Rémy — voix masculine" },
+    ],
+  },
+  {
+    value: "en-GB",
+    label: "English UK",
+    defaultVoice: "en-GB-RyanNeural",
+    voices: [
+      { value: "en-GB-RyanNeural", label: "Ryan — male" },
+      { value: "en-GB-SoniaNeural", label: "Sonia — female" },
+    ],
+  },
+  {
+    value: "en-US",
+    label: "English US",
+    defaultVoice: "en-US-GuyNeural",
+    voices: [
+      { value: "en-US-GuyNeural", label: "Guy — male" },
+      { value: "en-US-JennyNeural", label: "Jenny — female" },
+    ],
+  },
+];
+
 type AgentCreationResponse = {
   id: string;
   name: string;
@@ -10,6 +54,8 @@ type AgentCreationResponse = {
   recommendedChannel: "telegram" | "whatsapp";
   provider: "anthropic" | "codex";
   model: "anthropic/claude-sonnet-4-6" | "gpt-5.4";
+  language: AgentLanguage;
+  voice: string;
   nextStep: string;
   activationTarget: string;
 };
@@ -25,6 +71,8 @@ const defaultValues = {
   telegramBotToken: "",
   provider: "codex",
   model: "gpt-5.4",
+  language: "fr-FR" as AgentLanguage,
+  voice: "fr-FR-VivienneMultilingualNeural",
 };
 
 export function AgentCreationForm() {
@@ -135,6 +183,53 @@ export function AgentCreationForm() {
         ) : null}
 
         <div className="fieldset-row">
+          <label>
+            Language
+            <select
+              name="language"
+              value={formValues.language}
+              onChange={(event) => {
+                const lang = event.target.value as AgentLanguage;
+                const langOption = LANGUAGE_OPTIONS.find((l) => l.value === lang);
+                setFormValues((current) => ({
+                  ...current,
+                  language: lang,
+                  voice: langOption?.defaultVoice ?? current.voice,
+                }));
+              }}
+            >
+              {LANGUAGE_OPTIONS.map((lang) => (
+                <option key={lang.value} value={lang.value}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Voice
+            <select
+              name="voice"
+              value={formValues.voice}
+              onChange={(event) =>
+                setFormValues((current) => ({
+                  ...current,
+                  voice: event.target.value,
+                }))
+              }
+            >
+              {(
+                LANGUAGE_OPTIONS.find((l) => l.value === formValues.language)?.voices ?? []
+              ).map((v) => (
+                <option key={v.value} value={v.value}>
+                  {v.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="fieldset-row">
           <fieldset>
             <legend>Channel</legend>
 
@@ -221,6 +316,9 @@ export function AgentCreationForm() {
             </p>
             <p>
               Runtime: <strong>{result.provider}/{result.model}</strong>
+            </p>
+            <p>
+              Voice: <strong>{result.language} / {result.voice}</strong>
             </p>
             <p>{result.nextStep}</p>
             {result.recommendedChannel === "telegram" ? (

@@ -4,6 +4,18 @@ export const DEFAULT_AGENT_MODEL = "anthropic/claude-sonnet-4-6";
 export type AgentProvider = "anthropic" | "codex";
 export type AgentModel = "anthropic/claude-sonnet-4-6" | "gpt-5.4";
 
+export type AgentLanguage = "fr-FR" | "en-GB" | "en-US";
+export type AgentVoice =
+  | "fr-FR-VivienneMultilingualNeural"
+  | "fr-FR-RemyMultilingualNeural"
+  | "en-GB-RyanNeural"
+  | "en-GB-SoniaNeural"
+  | "en-US-GuyNeural"
+  | "en-US-JennyNeural";
+
+export const DEFAULT_AGENT_LANGUAGE: AgentLanguage = "fr-FR";
+export const DEFAULT_AGENT_VOICE: AgentVoice = "fr-FR-VivienneMultilingualNeural";
+
 export type AgentRuntimeConfig = {
   provider: AgentProvider;
   model: AgentModel;
@@ -20,6 +32,47 @@ const supportedModelsByProvider = {
   anthropic: [DEFAULT_AGENT_MODEL],
   codex: ["gpt-5.4"],
 } as const satisfies Record<AgentProvider, readonly AgentModel[]>;
+
+const supportedVoicesByLanguage = {
+  "fr-FR": ["fr-FR-VivienneMultilingualNeural", "fr-FR-RemyMultilingualNeural"],
+  "en-GB": ["en-GB-RyanNeural", "en-GB-SoniaNeural"],
+  "en-US": ["en-US-GuyNeural", "en-US-JennyNeural"],
+} as const satisfies Record<AgentLanguage, readonly AgentVoice[]>;
+
+export function getSupportedAgentLanguages(): AgentLanguage[] {
+  return Object.keys(supportedVoicesByLanguage) as AgentLanguage[];
+}
+
+export function getSupportedVoicesForLanguage(language: AgentLanguage): AgentVoice[] {
+  return [...supportedVoicesByLanguage[language]];
+}
+
+export function getDefaultVoiceForLanguage(language: AgentLanguage): AgentVoice {
+  return supportedVoicesByLanguage[language][0];
+}
+
+export function createAgentVoiceConfig(input: {
+  language?: string;
+  voice?: string;
+}): { language: AgentLanguage; voice: AgentVoice } {
+  const language = input.language ?? DEFAULT_AGENT_LANGUAGE;
+
+  if (!isAgentLanguage(language)) {
+    throw new Error(
+      `Unsupported agent language "${language}". Supported languages: ${getSupportedAgentLanguages().join(", ")}`,
+    );
+  }
+
+  const voice = input.voice ?? getDefaultVoiceForLanguage(language);
+
+  if (!isSupportedVoiceForLanguage(language, voice)) {
+    throw new Error(
+      `Unsupported voice "${voice}" for language "${language}". Supported voices: ${getSupportedVoicesForLanguage(language).join(", ")}`,
+    );
+  }
+
+  return { language, voice };
+}
 
 export function createAgentRuntimeConfig(input: {
   provider?: string;
@@ -96,6 +149,17 @@ function isSupportedModelForProvider(
   return getSupportedModelsForProvider(provider).includes(model as AgentModel);
 }
 
+function isAgentLanguage(language: string): language is AgentLanguage {
+  return language in supportedVoicesByLanguage;
+}
+
+function isSupportedVoiceForLanguage(
+  language: AgentLanguage,
+  voice: string,
+): voice is AgentVoice {
+  return getSupportedVoicesForLanguage(language).includes(voice as AgentVoice);
+}
+
 export type AgentProfile = {
   id: string;
   name: string;
@@ -103,6 +167,8 @@ export type AgentProfile = {
   channel: "telegram" | "whatsapp";
   provider: AgentProvider;
   model: AgentModel;
+  language: AgentLanguage;
+  voice: AgentVoice;
   status:
     | "draft"
     | "provisioning"
@@ -120,12 +186,18 @@ export function createAgentProfile(input: {
   channel: "telegram" | "whatsapp";
   provider?: string;
   model?: string;
+  language?: string;
+  voice?: string;
   activationTarget?: string;
 }): AgentProfile {
   const normalizedOwner = input.ownerId.trim();
   const runtimeConfig = createAgentRuntimeConfig({
     provider: input.provider,
     model: input.model,
+  });
+  const voiceConfig = createAgentVoiceConfig({
+    language: input.language,
+    voice: input.voice,
   });
 
   return {
@@ -135,6 +207,8 @@ export function createAgentProfile(input: {
     channel: input.channel,
     provider: runtimeConfig.provider,
     model: runtimeConfig.model,
+    language: voiceConfig.language,
+    voice: voiceConfig.voice,
     status: input.channel === "telegram" ? "ready" : "pending_verification",
     activationTarget:
       input.activationTarget ??

@@ -12,6 +12,8 @@ export type CreateAgentInput = {
   telegramBotToken: string;
   provider?: string;
   model?: string;
+  language?: string;
+  voice?: string;
 };
 
 export type CreateAgentResult = AgentProfile & {
@@ -36,6 +38,8 @@ export async function createAgent(input: CreateAgentInput): Promise<CreateAgentR
     channel: input.channel,
     provider: input.provider,
     model: input.model,
+    language: input.language,
+    voice: input.voice,
     activationTarget: `https://t.me/${botUsername}`,
   });
 
@@ -46,6 +50,8 @@ export async function createAgent(input: CreateAgentInput): Promise<CreateAgentR
     telegramBotToken: input.telegramBotToken,
     provider: profile.provider,
     model: profile.model,
+    language: profile.language,
+    voice: profile.voice,
   });
 
   return {

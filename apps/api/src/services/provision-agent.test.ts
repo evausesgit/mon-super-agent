@@ -29,6 +29,8 @@ describe("provisionAgent", () => {
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "anthropic",
       model: "anthropic/claude-sonnet-4-6",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
     });
   });
 
@@ -49,6 +51,8 @@ describe("provisionAgent", () => {
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "codex",
       model: "gpt-5.4",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
     });
   });
 

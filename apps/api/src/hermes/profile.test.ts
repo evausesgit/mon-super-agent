@@ -70,6 +70,8 @@ describe("createHermesProfile", () => {
       telegramBotToken: "1234567890:AAxxxxxx",
       provider: "codex",
       model: "gpt-5.4",
+      language: "fr-FR",
+      voice: "fr-FR-VivienneMultilingualNeural",
     });
 
     expect(
@@ -81,5 +83,53 @@ describe("createHermesProfile", () => {
   default: gpt-5.4
   provider: codex
 `);
+  });
+
+  it("writes TTS provider and voice to the Hermes config", () => {
+    const hermesHome = fs.mkdtempSync(path.join(os.tmpdir(), "hermes-profile-"));
+    vi.stubEnv("HERMES_HOME", hermesHome);
+
+    createHermesProfile({
+      agentId: "agent-ryan",
+      agentName: "Ryan",
+      ownerId: "@eva",
+      telegramBotToken: "1234567890:AAxxxxxx",
+      provider: "anthropic",
+      model: "anthropic/claude-sonnet-4-6",
+      language: "en-GB",
+      voice: "en-GB-RyanNeural",
+    });
+
+    const config = fs.readFileSync(
+      path.join(hermesHome, "profiles", "agent-ryan", "config.yaml"),
+      "utf8",
+    );
+    expect(config).toContain("tts:");
+    expect(config).toContain("  provider: edge");
+    expect(config).toContain("    voice: en-GB-RyanNeural");
+  });
+
+  it("writes the language instruction to SOUL.md", () => {
+    const hermesHome = fs.mkdtempSync(path.join(os.tmpdir(), "hermes-profile-"));
+    vi.stubEnv("HERMES_HOME", hermesHome);
+
+    createHermesProfile({
+      agentId: "agent-sonia",
+      agentName: "Sonia",
+      ownerId: "@eva",
+      telegramBotToken: "1234567890:AAxxxxxx",
+      provider: "anthropic",
+      model: "anthropic/claude-sonnet-4-6",
+      language: "en-GB",
+      voice: "en-GB-SoniaNeural",
+    });
+
+    const soul = fs.readFileSync(
+      path.join(hermesHome, "profiles", "agent-sonia", "SOUL.md"),
+      "utf8",
+    );
+    expect(soul).toContain(
+      "Respond in British English by default, unless the user explicitly asks for another language.",
+    );
   });
 });

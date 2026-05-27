@@ -41,6 +41,8 @@ export function openAgentDatabase(
       channel TEXT NOT NULL,
       provider TEXT NOT NULL DEFAULT 'anthropic',
       model TEXT NOT NULL DEFAULT 'anthropic/claude-sonnet-4-6',
+      language TEXT NOT NULL DEFAULT 'fr-FR',
+      voice TEXT NOT NULL DEFAULT 'fr-FR-VivienneMultilingualNeural',
       gateway_pid INTEGER,
       gateway_status TEXT NOT NULL DEFAULT 'provisioning',
       created_at INTEGER NOT NULL
@@ -55,6 +57,16 @@ export function openAgentDatabase(
     database,
     "model",
     "TEXT NOT NULL DEFAULT 'anthropic/claude-sonnet-4-6'",
+  );
+  ensureAgentColumn(
+    database,
+    "language",
+    "TEXT NOT NULL DEFAULT 'fr-FR'",
+  );
+  ensureAgentColumn(
+    database,
+    "voice",
+    "TEXT NOT NULL DEFAULT 'fr-FR-VivienneMultilingualNeural'",
   );
 
   return database;

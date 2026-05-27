@@ -1,4 +1,8 @@
-import { createAgentRuntimeConfig } from "@mon-super-agent/agent-runtime";
+import {
+  DEFAULT_AGENT_LANGUAGE,
+  DEFAULT_AGENT_VOICE,
+  createAgentRuntimeConfig,
+} from "@mon-super-agent/agent-runtime";
 import { createHermesProfile } from "../hermes/profile.js";
 
 export type ProvisionAgentInput = {
@@ -8,6 +12,8 @@ export type ProvisionAgentInput = {
   telegramBotToken: string;
   provider?: string;
   model?: string;
+  language?: string;
+  voice?: string;
 };
 
 export function provisionAgent(input: ProvisionAgentInput): void {
@@ -20,5 +26,7 @@ export function provisionAgent(input: ProvisionAgentInput): void {
     ...input,
     provider: runtimeConfig.provider,
     model: runtimeConfig.model,
+    language: input.language ?? DEFAULT_AGENT_LANGUAGE,
+    voice: input.voice ?? DEFAULT_AGENT_VOICE,
   });
 }
